@@ -1,0 +1,11 @@
+{
+  "waitingForVotes": "等待投票中 ({{count}}/{{total}})",
+  "revealButton": "翻开卡牌",
+  "resetButton": "新一轮",
+  "stats": {
+    "average": "平均",
+    "median": "中位数",
+    "min": "最低",
+    "max": "最高"
+  }
+}

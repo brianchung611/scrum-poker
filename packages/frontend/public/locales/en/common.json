@@ -1,0 +1,15 @@
+{
+  "appName": "Scrum Poker",
+  "tagline": "Real-time planning poker for agile teams.",
+  "language": "Language",
+  "languages": {
+    "en": "English",
+    "zh-TW": "繁體中文",
+    "zh-CN": "简体中文"
+  },
+  "createRoom": "Create room",
+  "joinRoom": "Join room",
+  "displayName": "Display name",
+  "roomCode": "Room code",
+  "error": "Something went wrong"
+}

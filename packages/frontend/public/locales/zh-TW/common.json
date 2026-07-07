@@ -1,0 +1,15 @@
+{
+  "appName": "Scrum Poker",
+  "tagline": "為敏捷團隊打造的即時撲克估點工具。",
+  "language": "語言",
+  "languages": {
+    "en": "English",
+    "zh-TW": "繁體中文",
+    "zh-CN": "简体中文"
+  },
+  "createRoom": "建立房間",
+  "joinRoom": "加入房間",
+  "displayName": "顯示名稱",
+  "roomCode": "房間代碼",
+  "error": "發生錯誤"
+}
