@@ -1,0 +1,11 @@
+{
+  "waitingForVotes": "Waiting for votes ({{count}}/{{total}})",
+  "revealButton": "Reveal cards",
+  "resetButton": "New round",
+  "stats": {
+    "average": "Average",
+    "median": "Median",
+    "min": "Min",
+    "max": "Max"
+  }
+}
