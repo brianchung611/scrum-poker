@@ -6,6 +6,8 @@
     "packages/*"
   ],
   "scripts": {
+    "postinstall": "npm run build -w @scrum-poker/shared",
+    "predev": "npm run build -w @scrum-poker/shared",
     "dev": "concurrently -n backend,frontend -c blue,green \"npm run dev -w @scrum-poker/backend\" \"npm run dev -w @scrum-poker/frontend\"",
     "build": "npm run build -w @scrum-poker/shared && npm run build -w @scrum-poker/backend && npm run build -w @scrum-poker/frontend",
     "typecheck": "npm run typecheck -w @scrum-poker/shared && npm run typecheck -w @scrum-poker/backend && npm run typecheck -w @scrum-poker/frontend"

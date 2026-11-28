@@ -7,5 +7,14 @@
     "median": "中位數",
     "min": "最低",
     "max": "最高"
-  }
+  },
+  "roomCodeLabel": "房間代碼",
+  "copyLink": "複製邀請連結",
+  "linkCopied": "已複製！",
+  "participants": "參與者（{{count}}）",
+  "facilitator": "主持人",
+  "you": "你",
+  "connecting": "正在加入房間…",
+  "reconnecting": "連線中斷，重新連線中…",
+  "enterNameTitle": "加入房間 {{code}}"
 }

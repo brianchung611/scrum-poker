@@ -7,5 +7,14 @@
     "median": "Median",
     "min": "Min",
     "max": "Max"
-  }
+  },
+  "roomCodeLabel": "Room code",
+  "copyLink": "Copy invite link",
+  "linkCopied": "Copied!",
+  "participants": "Participants ({{count}})",
+  "facilitator": "Facilitator",
+  "you": "You",
+  "connecting": "Joining room…",
+  "reconnecting": "Connection lost. Reconnecting…",
+  "enterNameTitle": "Join room {{code}}"
 }

@@ -11,5 +11,18 @@
   "joinRoom": "加入房間",
   "displayName": "顯示名稱",
   "roomCode": "房間代碼",
-  "error": "發生錯誤"
+  "error": "發生錯誤",
+  "start": "開始",
+  "join": "加入",
+  "roomCodePlaceholder": "例如 K7P2QD",
+  "backHome": "返回首頁",
+  "loading": "載入中…",
+  "createRoomHint": "開始新的估點，並將連結分享給團隊。",
+  "joinRoomHint": "請輸入你收到的房間代碼。",
+  "createFailed": "無法建立房間，請再試一次。",
+  "errors": {
+    "room_not_found": "找不到房間，請檢查代碼後再試一次。",
+    "invalid_display_name": "請輸入顯示名稱（最多 30 個字元）。",
+    "generic": "發生錯誤。"
+  }
 }

@@ -12,6 +12,13 @@ export const DECKS: Record<DeckId, CardValue[]> = {
 
 export const DEFAULT_DECK: DeckId = 'fibonacci';
 
+export const MAX_DISPLAY_NAME_LENGTH = 30;
+export const ROOM_CODE_LENGTH = 6;
+
+export interface CreateRoomResponse {
+  roomCode: string;
+}
+
 export type RoomPhase = 'voting' | 'revealed';
 
 export interface Player {
