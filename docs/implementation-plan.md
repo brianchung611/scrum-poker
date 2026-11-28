@@ -10,11 +10,11 @@ Working plan for building Scrum Poker from [scrum-poker-prd.md](../scrum-poker-p
 | 2 | Room lifecycle | Create room, join by code, live participant list, reconnection recovery | ✅ Done | [#3](https://github.com/brianchung611/scrum-poker/pull/3) |
 | 3 | Voting core (**MVP**) | Card deck, private voting, facilitator reveal, stats, round reset | ✅ Done | [#4](https://github.com/brianchung611/scrum-poker/pull/4) |
 | 4 | Polish | Round reset*, kick, mobile layout, deck selection, room expiry, language switcher UI* | ✅ Done | [#5](https://github.com/brianchung611/scrum-poker/pull/5) |
-| 5 | P1 features | Observer mode, story name, facilitator transfer, timer | 🔄 In review | [#6](https://github.com/brianchung611/scrum-poker/pull/6) |
+| 5 | P1 features | Observer mode, story name, facilitator transfer, timer | ✅ Done | [#6](https://github.com/brianchung611/scrum-poker/pull/6) |
 
 \* Round reset is built in M3 (needed for a usable MVP loop). The language switcher already exists from M1. M4 covers what's left of the PRD's M4 row.
 
-Agreed scope so far: **Milestones 1–5**, i.e. everything in the PRD's milestone table. Once M5 is merged the planned work is done; anything further (Later list below) needs a new request.
+**Phase 1 (Milestones 1–5, everything in the PRD's milestone table) is complete.** The next work is **[Phase 2: Hardening & Launch](./phase-2-plan.md)**: automated tests + CI, deployment prep, persistent player identity, abuse limits (in that order). Read that file to resume; it has its own status table.
 
 ## Workflow rules
 
@@ -144,9 +144,4 @@ railway.json, .claude/launch.json, tsconfig.base.json (strict, Bundler resolutio
 
 ## Later (not yet scheduled)
 
-All five PRD milestones are built once M5 merges. Ideas deliberately left out so far:
-
-- Deploying (Railway/Vercel config exists; nothing is deployed), an SPA fallback on the frontend host, and a CI workflow.
-- Automated tests (verification has been manual + ad-hoc socket scripts).
-- Rejoin identity (so a refreshed facilitator keeps the role and a kicked player stays out), an in-room observer toggle, a styled confirm dialog instead of `window.confirm`.
-- Out of scope for v1 per the PRD: vote history, accounts, Jira/Linear integration, native mobile, self-hosting.
+See [phase-2-plan.md](./phase-2-plan.md) for the planned follow-up work and the list of ideas beyond it. The limitations noted above (a refreshed player rejoins as a new player, a kicked player can rejoin, no automated tests, nothing deployed) are addressed by Phase 2.
