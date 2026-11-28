@@ -42,6 +42,9 @@ export interface RoomState {
   players: Player[];
   facilitatorId: string | null;
   myId: string;
+  /** The recipient's own vote (private to them); null if they haven't voted. */
+  myVote: CardValue | null;
+  /** Only present once the round is revealed. */
   votes?: Record<string, CardValue>;
   stats?: VoteStats;
 }

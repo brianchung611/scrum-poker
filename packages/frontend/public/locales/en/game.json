@@ -16,5 +16,15 @@
   "you": "You",
   "connecting": "Joining room…",
   "reconnecting": "Connection lost. Reconnecting…",
-  "enterNameTitle": "Join room {{code}}"
+  "enterNameTitle": "Join room {{code}}",
+  "pickACard": "Pick a card",
+  "cardDeck": "Card deck",
+  "cardCoffee": "Coffee break",
+  "cardUnsure": "Not sure",
+  "results": "Results",
+  "roundRevealed": "Cards revealed",
+  "voted": "Voted",
+  "notVotedYet": "Not voted yet",
+  "noVote": "No vote",
+  "outlier": "highest or lowest vote"
 }

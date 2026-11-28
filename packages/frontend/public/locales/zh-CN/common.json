@@ -23,6 +23,10 @@
   "errors": {
     "room_not_found": "找不到房间，请检查代码后重试。",
     "invalid_display_name": "请输入显示名称（最多 30 个字符）。",
-    "generic": "发生错误。"
+    "generic": "发生错误。",
+    "not_authorised": "只有主持人可以执行此操作。",
+    "invalid_vote": "此牌组中没有这张卡牌。",
+    "round_not_voting": "投票已结束，请等待下一轮。",
+    "not_in_room": "你不在此房间中，请刷新页面。"
   }
 }

@@ -16,5 +16,15 @@
   "you": "你",
   "connecting": "正在加入房間…",
   "reconnecting": "連線中斷，重新連線中…",
-  "enterNameTitle": "加入房間 {{code}}"
+  "enterNameTitle": "加入房間 {{code}}",
+  "pickACard": "選擇一張卡牌",
+  "cardDeck": "卡牌",
+  "cardCoffee": "休息一下",
+  "cardUnsure": "不確定",
+  "results": "結果",
+  "roundRevealed": "已翻開卡牌",
+  "voted": "已投票",
+  "notVotedYet": "尚未投票",
+  "noVote": "未投票",
+  "outlier": "最高或最低票"
 }

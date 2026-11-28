@@ -1,17 +1,21 @@
+import { DECKS } from '@scrum-poker/shared';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
+import { CardDeck } from '../components/CardDeck';
 import { NameForm } from '../components/NameForm';
 import { ParticipantList } from '../components/ParticipantList';
+import { RoundControls } from '../components/RoundControls';
+import { VoteStats } from '../components/VoteStats';
 import { getStoredDisplayName, storeDisplayName } from '../session';
-import { joinRoom, useRoomStore } from '../store/useRoomStore';
+import { castVote, joinRoom, useRoomStore } from '../store/useRoomStore';
 
 export default function RoomPage() {
   const { t } = useTranslation(['game', 'common']);
   const roomCode = (useParams().code ?? '').toUpperCase();
   const [displayName, setDisplayName] = useState(getStoredDisplayName);
   const [copied, setCopied] = useState(false);
-  const { room, connected, error } = useRoomStore();
+  const { room, connected, error, notice } = useRoomStore();
 
   // Joins on mount and whenever the code or name changes; cleanup leaves the room.
   useEffect(() => {
@@ -82,7 +86,29 @@ export default function RoomPage() {
           {copied ? t('game:linkCopied') : t('game:copyLink')}
         </button>
       </section>
-      <ParticipantList players={room.players} myId={room.myId} />
+      {notice && (
+        <p role="alert" className="banner banner-error">
+          {t(`common:errors.${notice}`, { defaultValue: t('common:errors.generic') })}
+        </p>
+      )}
+      <RoundControls room={room} />
+      <section className="panel" aria-labelledby="deck-heading">
+        <h2 id="deck-heading">{t('pickACard')}</h2>
+        <CardDeck
+          deck={DECKS[room.deckId]}
+          selected={room.myVote}
+          disabled={room.phase === 'revealed'}
+          onSelect={castVote}
+        />
+      </section>
+      {room.phase === 'revealed' && room.stats && <VoteStats stats={room.stats} />}
+      <ParticipantList
+        players={room.players}
+        myId={room.myId}
+        phase={room.phase}
+        votes={room.votes}
+        stats={room.stats}
+      />
     </div>
   );
 }
