@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 interface Props {
   players: Player[];
   myId: string;
+  /** When set, a remove button is shown on every other participant. */
+  onKick?: (player: Player) => void;
   phase: RoomPhase;
   votes?: Record<string, CardValue>;
   stats?: VoteStats;
@@ -11,7 +13,7 @@ interface Props {
 
 const NUMERIC = /^\d+(\.\d+)?$/;
 
-export function ParticipantList({ players, myId, phase, votes, stats }: Props) {
+export function ParticipantList({ players, myId, onKick, phase, votes, stats }: Props) {
   const { t } = useTranslation('game');
   const revealed = phase === 'revealed';
 
@@ -38,12 +40,23 @@ export function ParticipantList({ players, myId, phase, votes, stats }: Props) {
               <span className="participant-name">{player.displayName}</span>
               {player.isFacilitator && <span className="badge">{t('facilitator')}</span>}
               {player.id === myId && <span className="badge badge-muted">{t('you')}</span>}
+              {onKick && player.id !== myId && (
+                <button
+                  type="button"
+                  className="kick"
+                  aria-label={t('kick', { name: player.displayName })}
+                  title={t('kick', { name: player.displayName })}
+                  onClick={() => onKick(player)}
+                >
+                  ✕
+                </button>
+              )}
               <span className="vote-slot">
                 {player.hasVoted ? (
                   // One element across the reveal so the face-down card animates into the value.
                   // The value is only rendered once the server has revealed it.
                   <span
-                    className={`flip${revealed ? ' flipped' : ''}${outlier ? ' outlier' : ''}`}
+                    className={`flip${revealed ? ' flipped' : ''}${outlier ? ' outlier' : ''}${(value?.length ?? 0) > 2 ? ' flip-long' : ''}`}
                     role="img"
                     aria-label={
                       revealed && value !== undefined

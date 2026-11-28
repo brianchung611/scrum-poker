@@ -1,14 +1,14 @@
-import { DECKS } from '@scrum-poker/shared';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import { CardDeck } from '../components/CardDeck';
+import { DeckSettings } from '../components/DeckSettings';
 import { NameForm } from '../components/NameForm';
 import { ParticipantList } from '../components/ParticipantList';
 import { RoundControls } from '../components/RoundControls';
 import { VoteStats } from '../components/VoteStats';
 import { getStoredDisplayName, storeDisplayName } from '../session';
-import { castVote, joinRoom, useRoomStore } from '../store/useRoomStore';
+import { castVote, joinRoom, kickParticipant, useRoomStore } from '../store/useRoomStore';
 
 export default function RoomPage() {
   const { t } = useTranslation(['game', 'common']);
@@ -94,17 +94,33 @@ export default function RoomPage() {
       <RoundControls room={room} />
       <section className="panel" aria-labelledby="deck-heading">
         <h2 id="deck-heading">{t('pickACard')}</h2>
+        {room.facilitatorId === room.myId && <DeckSettings
+            key={`${room.deckId}:${room.cards.join(',')}`}
+            currentDeckId={room.deckId}
+            currentCards={room.cards}
+          />}
         <CardDeck
-          deck={DECKS[room.deckId]}
+          deck={room.cards}
           selected={room.myVote}
           disabled={room.phase === 'revealed'}
           onSelect={castVote}
         />
       </section>
-      {room.phase === 'revealed' && room.stats && <VoteStats stats={room.stats} />}
+      {room.phase === 'revealed' && room.stats && (
+        <VoteStats stats={room.stats} cards={room.cards} votes={room.votes} />
+      )}
       <ParticipantList
         players={room.players}
         myId={room.myId}
+        onKick={
+          room.facilitatorId === room.myId
+            ? (player) => {
+                if (window.confirm(t('kickConfirm', { name: player.displayName }))) {
+                  kickParticipant(player.id);
+                }
+              }
+            : undefined
+        }
         phase={room.phase}
         votes={room.votes}
         stats={room.stats}

@@ -39,7 +39,7 @@ export function CardDeck({ deck, selected, disabled, onSelect }: Props) {
             buttons.current[index] = el;
           }}
           type="button"
-          className={`card${selected === value ? ' card-selected' : ''}`}
+          className={`card${selected === value ? ' card-selected' : ''}${value.length > 2 ? ' card-long' : ''}`}
           aria-pressed={selected === value}
           aria-label={label(value)}
           disabled={disabled}

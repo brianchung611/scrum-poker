@@ -397,3 +397,65 @@ button:disabled {
     transition: none;
   }
 }
+
+.deck-settings {
+  margin-top: 0.5rem;
+}
+
+.deck-settings summary {
+  cursor: pointer;
+  color: var(--accent-hover);
+  width: fit-content;
+}
+
+.deck-settings .form {
+  margin-top: 0.75rem;
+}
+
+.card-long {
+  font-size: 1rem;
+}
+
+.flip-long .face.front {
+  font-size: 0.85rem;
+}
+
+.kick {
+  padding: 0.2rem 0.5rem;
+  font-size: 0.8rem;
+  line-height: 1;
+  color: var(--muted);
+}
+
+.kick:hover {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.tally {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.tally li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 0.5rem 0.9rem;
+  font-weight: 700;
+}
+
+.tally-card {
+  background: #f8fafc;
+  color: #0f172a;
+  border-radius: 6px;
+  padding: 0.25rem 0.6rem;
+  min-width: 2.2rem;
+  text-align: center;
+}

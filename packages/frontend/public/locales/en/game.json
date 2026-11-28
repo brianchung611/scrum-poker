@@ -26,5 +26,12 @@
   "voted": "Voted",
   "notVotedYet": "Not voted yet",
   "noVote": "No vote",
-  "outlier": "highest or lowest vote"
+  "outlier": "highest or lowest vote",
+  "changeDeck": "Change deck",
+  "changeDeckWarning": "Changing the deck starts a new round and clears all votes.",
+  "applyDeck": "Apply deck",
+  "kick": "Remove {{name}}",
+  "kickConfirm": "Remove {{name}} from the room?",
+  "tallyCount_one": "{{count}} vote",
+  "tallyCount_other": "{{count}} votes"
 }

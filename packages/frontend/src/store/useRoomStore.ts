@@ -3,8 +3,11 @@ import {
   SERVER_EVENTS,
   type CardValue,
   type CastVotePayload,
+  type ChangeDeckPayload,
+  type DeckId,
   type ErrorPayload,
   type JoinRoomPayload,
+  type KickParticipantPayload,
   type ParticipantJoinedPayload,
   type ParticipantLeftPayload,
   type RoomState,
@@ -31,7 +34,12 @@ export const useRoomStore = create<RoomStore>(() => ({
 }));
 
 // Errors that mean "you are not in a usable room"; everything else is a transient notice.
-const FATAL_ERRORS = new Set(['room_not_found', 'invalid_display_name']);
+const FATAL_ERRORS = new Set([
+  'room_not_found',
+  'invalid_display_name',
+  'kicked',
+  'room_expired',
+]);
 const NOTICE_MS = 4000;
 let noticeTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -59,6 +67,18 @@ export function revealVotes(): void {
 /** Facilitator only (enforced by the server). */
 export function resetRound(): void {
   socket.emit(CLIENT_EVENTS.RESET_ROUND);
+}
+
+/** Facilitator only (enforced by the server). Starts a new round with the new deck. */
+export function changeDeck(deckId: DeckId, customCards?: string[]): void {
+  const payload: ChangeDeckPayload = { deckId, customCards };
+  socket.emit(CLIENT_EVENTS.CHANGE_DECK, payload);
+}
+
+/** Facilitator only (enforced by the server). */
+export function kickParticipant(participantId: string): void {
+  const payload: KickParticipantPayload = { participantId };
+  socket.emit(CLIENT_EVENTS.KICK_PARTICIPANT, payload);
 }
 
 /**
@@ -121,8 +141,13 @@ export function joinRoom(roomCode: string, displayName: string): () => void {
         : {},
     );
   const onError = ({ message }: ErrorPayload) => {
-    if (FATAL_ERRORS.has(message)) useRoomStore.setState({ error: message });
-    else showNotice(message);
+    if (FATAL_ERRORS.has(message)) {
+      useRoomStore.setState({ error: message });
+      // Don't let a removed player silently rejoin if the connection later reconnects.
+      if (message === 'kicked') socket.disconnect();
+    } else {
+      showNotice(message);
+    }
   };
 
   socket.on('connect', onConnect);
