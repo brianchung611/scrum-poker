@@ -8,7 +8,7 @@ Working plan for building Scrum Poker from [scrum-poker-prd.md](../scrum-poker-p
 |---|---|---|---|---|
 | 1 | Scaffold | Monorepo, shared types, Express + Socket.io, React + Vite, Railway config, i18next + 3 locales | ✅ Done | [#1](https://github.com/brianchung611/scrum-poker/pull/1) |
 | 2 | Room lifecycle | Create room, join by code, live participant list, reconnection recovery | ✅ Done | [#3](https://github.com/brianchung611/scrum-poker/pull/3) |
-| 3 | Voting core (**MVP**) | Card deck, private voting, facilitator reveal, stats, round reset | 🔄 In review | PR_M3 |
+| 3 | Voting core (**MVP**) | Card deck, private voting, facilitator reveal, stats, round reset | 🔄 In review | [#4](https://github.com/brianchung611/scrum-poker/pull/4) |
 | 4 | Polish | Round reset*, kick, mobile layout, deck selection, room expiry, language switcher UI* | ⬜ Deferred | — |
 | 5 | P1 features | Observer mode, story name, facilitator transfer, timer | ⬜ Deferred | — |
 
