@@ -5,7 +5,8 @@ import { resetRound, revealVotes } from '../store/useRoomStore';
 export function RoundControls({ room }: { room: RoomState }) {
   const { t } = useTranslation('game');
   const isFacilitator = room.facilitatorId === room.myId;
-  const voted = room.players.filter((p) => p.hasVoted).length;
+  const voters = room.players.filter((p) => !p.isObserver);
+  const voted = voters.filter((p) => p.hasVoted).length;
   const revealed = room.phase === 'revealed';
 
   return (
@@ -13,7 +14,7 @@ export function RoundControls({ room }: { room: RoomState }) {
       <p className="controls-status">
         {revealed
           ? t('roundRevealed')
-          : t('waitingForVotes', { count: voted, total: room.players.length })}
+          : t('waitingForVotes', { count: voted, total: voters.length })}
       </p>
       {isFacilitator &&
         (revealed ? (

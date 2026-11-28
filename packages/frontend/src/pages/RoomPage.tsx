@@ -6,22 +6,36 @@ import { DeckSettings } from '../components/DeckSettings';
 import { NameForm } from '../components/NameForm';
 import { ParticipantList } from '../components/ParticipantList';
 import { RoundControls } from '../components/RoundControls';
+import { StoryPanel } from '../components/StoryPanel';
+import { TimerPanel } from '../components/TimerPanel';
 import { VoteStats } from '../components/VoteStats';
-import { getStoredDisplayName, storeDisplayName } from '../session';
-import { castVote, joinRoom, kickParticipant, useRoomStore } from '../store/useRoomStore';
+import {
+  getStoredDisplayName,
+  getStoredObserver,
+  storeDisplayName,
+  storeObserver,
+} from '../session';
+import {
+  castVote,
+  joinRoom,
+  kickParticipant,
+  transferFacilitator,
+  useRoomStore,
+} from '../store/useRoomStore';
 
 export default function RoomPage() {
   const { t } = useTranslation(['game', 'common']);
   const roomCode = (useParams().code ?? '').toUpperCase();
   const [displayName, setDisplayName] = useState(getStoredDisplayName);
+  const [observer, setObserver] = useState(getStoredObserver);
   const [copied, setCopied] = useState(false);
-  const { room, connected, error, notice } = useRoomStore();
+  const { room, connected, error, notice, timerEndsAt } = useRoomStore();
 
   // Joins on mount and whenever the code or name changes; cleanup leaves the room.
   useEffect(() => {
     if (!displayName) return;
-    return joinRoom(roomCode, displayName);
-  }, [roomCode, displayName]);
+    return joinRoom(roomCode, displayName, observer);
+  }, [roomCode, displayName, observer]);
 
   if (!displayName) {
     // Opened via a shared link (or a fresh tab): ask for a name first.
@@ -30,8 +44,11 @@ export default function RoomPage() {
         <NameForm
           title={t('game:enterNameTitle', { code: roomCode })}
           submitLabel={t('common:join')}
-          onSubmit={(name) => {
+          allowObserver
+          onSubmit={(name, asObserver) => {
             storeDisplayName(name);
+            storeObserver(asObserver);
+            setObserver(asObserver);
             setDisplayName(name);
           }}
         />
@@ -70,6 +87,10 @@ export default function RoomPage() {
     }
   };
 
+  const isFacilitator = room.facilitatorId === room.myId;
+  const me = room.players.find((p) => p.id === room.myId);
+  const isObserver = me?.isObserver ?? false;
+
   return (
     <div className="room">
       {!connected && (
@@ -91,20 +112,27 @@ export default function RoomPage() {
           {t(`common:errors.${notice}`, { defaultValue: t('common:errors.generic') })}
         </p>
       )}
+      <StoryPanel story={room.story} isFacilitator={isFacilitator} />
       <RoundControls room={room} />
+      {room.phase === 'voting' && <TimerPanel endsAt={timerEndsAt} isFacilitator={isFacilitator} />}
       <section className="panel" aria-labelledby="deck-heading">
-        <h2 id="deck-heading">{t('pickACard')}</h2>
-        {room.facilitatorId === room.myId && <DeckSettings
+        <h2 id="deck-heading">{isObserver ? t('observing') : t('pickACard')}</h2>
+        {isObserver && <p className="muted">{t('observerHint')}</p>}
+        {isFacilitator && (
+          <DeckSettings
             key={`${room.deckId}:${room.cards.join(',')}`}
             currentDeckId={room.deckId}
             currentCards={room.cards}
-          />}
-        <CardDeck
-          deck={room.cards}
-          selected={room.myVote}
-          disabled={room.phase === 'revealed'}
-          onSelect={castVote}
-        />
+          />
+        )}
+        {!isObserver && (
+          <CardDeck
+            deck={room.cards}
+            selected={room.myVote}
+            disabled={room.phase === 'revealed'}
+            onSelect={castVote}
+          />
+        )}
       </section>
       {room.phase === 'revealed' && room.stats && (
         <VoteStats stats={room.stats} cards={room.cards} votes={room.votes} />
@@ -113,10 +141,19 @@ export default function RoomPage() {
         players={room.players}
         myId={room.myId}
         onKick={
-          room.facilitatorId === room.myId
+          isFacilitator
             ? (player) => {
                 if (window.confirm(t('kickConfirm', { name: player.displayName }))) {
                   kickParticipant(player.id);
+                }
+              }
+            : undefined
+        }
+        onTransfer={
+          isFacilitator
+            ? (player) => {
+                if (window.confirm(t('transferConfirm', { name: player.displayName }))) {
+                  transferFacilitator(player.id);
                 }
               }
             : undefined

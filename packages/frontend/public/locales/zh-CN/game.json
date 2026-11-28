@@ -32,5 +32,24 @@
   "applyDeck": "应用牌组",
   "kick": "移除 {{name}}",
   "kickConfirm": "要将 {{name}} 移出房间吗？",
-  "tallyCount_other": "{{count}} 票"
+  "tallyCount_other": "{{count}} 票",
+  "observer": "观察者",
+  "observing": "你正在观察",
+  "observerHint": "观察者可以观看这一轮，但不能投票。",
+  "story": "故事",
+  "storyPlaceholder": "正在估算什么？例如 PROJ-42 登录页面",
+  "storySave": "设置",
+  "makeFacilitator": "将 {{name}} 设为主持人",
+  "transferConfirm": "要将 {{name}} 设为主持人吗？你将失去主持人的控制权。",
+  "timer": "计时器",
+  "timerStart": "开始计时",
+  "timerStop": "停止计时",
+  "timerDuration": "计时时长",
+  "timeUp": "时间到！",
+  "timerPreset": {
+    "30": "30 秒",
+    "60": "1 分钟",
+    "120": "2 分钟",
+    "300": "5 分钟"
+  }
 }

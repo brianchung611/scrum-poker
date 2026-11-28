@@ -32,5 +32,24 @@
   "applyDeck": "套用牌組",
   "kick": "移除 {{name}}",
   "kickConfirm": "要將 {{name}} 移出房間嗎？",
-  "tallyCount_other": "{{count}} 票"
+  "tallyCount_other": "{{count}} 票",
+  "observer": "觀察者",
+  "observing": "你正在觀察",
+  "observerHint": "觀察者可以觀看這一輪，但不能投票。",
+  "story": "故事",
+  "storyPlaceholder": "正在估算什麼？例如 PROJ-42 登入頁面",
+  "storySave": "設定",
+  "makeFacilitator": "將 {{name}} 設為主持人",
+  "transferConfirm": "要將 {{name}} 設為主持人嗎？你將失去主持人的控制權。",
+  "timer": "計時器",
+  "timerStart": "開始計時",
+  "timerStop": "停止計時",
+  "timerDuration": "計時長度",
+  "timeUp": "時間到！",
+  "timerPreset": {
+    "30": "30 秒",
+    "60": "1 分鐘",
+    "120": "2 分鐘",
+    "300": "5 分鐘"
+  }
 }

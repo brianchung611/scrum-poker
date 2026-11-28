@@ -11,6 +11,11 @@ import {
   type ParticipantJoinedPayload,
   type ParticipantLeftPayload,
   type RoomState,
+  type SetStoryPayload,
+  type StartTimerPayload,
+  type StoryChangedPayload,
+  type TimerStartedPayload,
+  type TransferFacilitatorPayload,
   type VoteCastPayload,
   type VotesRevealedPayload,
 } from '@scrum-poker/shared';
@@ -24,6 +29,8 @@ interface RoomStore {
   error: string | null;
   /** Non-fatal error code shown briefly, e.g. `not_authorised`. */
   notice: string | null;
+  /** Local epoch ms when the voting countdown ends (derived from the server's remaining time). */
+  timerEndsAt: number | null;
 }
 
 export const useRoomStore = create<RoomStore>(() => ({
@@ -31,6 +38,7 @@ export const useRoomStore = create<RoomStore>(() => ({
   connected: false,
   error: null,
   notice: null,
+  timerEndsAt: null,
 }));
 
 // Errors that mean "you are not in a usable room"; everything else is a transient notice.
@@ -81,16 +89,47 @@ export function kickParticipant(participantId: string): void {
   socket.emit(CLIENT_EVENTS.KICK_PARTICIPANT, payload);
 }
 
+/** Facilitator only (enforced by the server). Empty clears the story. */
+export function setStory(story: string): void {
+  const payload: SetStoryPayload = { story };
+  socket.emit(CLIENT_EVENTS.SET_STORY, payload);
+}
+
+/** Facilitator only. Hands the role over; this client loses its controls. */
+export function transferFacilitator(participantId: string): void {
+  const payload: TransferFacilitatorPayload = { participantId };
+  socket.emit(CLIENT_EVENTS.TRANSFER_FACILITATOR, payload);
+}
+
+/** Facilitator only. */
+export function startTimer(seconds: number): void {
+  const payload: StartTimerPayload = { seconds };
+  socket.emit(CLIENT_EVENTS.START_TIMER, payload);
+}
+
+/** Facilitator only. */
+export function stopTimer(): void {
+  socket.emit(CLIENT_EVENTS.STOP_TIMER);
+}
+
+const timerEndsFrom = (remainingMs: number) => Date.now() + remainingMs;
+
 /**
  * Connects the socket and joins a room. Returns a cleanup function that leaves.
  * `join_room` is re-sent on every `connect`, so a dropped connection recovers
  * with a fresh full `room_state` snapshot.
  */
-export function joinRoom(roomCode: string, displayName: string): () => void {
-  useRoomStore.setState({ room: null, error: null, notice: null, connected: socket.connected });
+export function joinRoom(roomCode: string, displayName: string, observer = false): () => void {
+  useRoomStore.setState({
+    room: null,
+    error: null,
+    notice: null,
+    timerEndsAt: null,
+    connected: socket.connected,
+  });
 
   const emitJoin = () => {
-    const payload: JoinRoomPayload = { roomCode, displayName };
+    const payload: JoinRoomPayload = { roomCode, displayName, observer };
     socket.emit(CLIENT_EVENTS.JOIN_ROOM, payload);
   };
 
@@ -99,11 +138,22 @@ export function joinRoom(roomCode: string, displayName: string): () => void {
     emitJoin();
   };
   const onDisconnect = () => useRoomStore.setState({ connected: false });
-  const onRoomState = (room: RoomState) => useRoomStore.setState({ room, error: null });
-  const onParticipantJoined = ({ participantId, displayName }: ParticipantJoinedPayload) =>
+  const onRoomState = (room: RoomState) =>
+    useRoomStore.setState({
+      room,
+      error: null,
+      timerEndsAt: room.timer ? timerEndsFrom(room.timer.remainingMs) : null,
+    });
+  const onParticipantJoined = ({ participantId, displayName, isObserver }: ParticipantJoinedPayload) =>
     useRoomStore.setState(({ room }) => {
       if (!room || room.players.some((p) => p.id === participantId)) return {};
-      const player = { id: participantId, displayName, isFacilitator: false, hasVoted: false };
+      const player = {
+        id: participantId,
+        displayName,
+        isFacilitator: false,
+        isObserver,
+        hasVoted: false,
+      };
       return { room: { ...room, players: [...room.players, player] } };
     });
   const onParticipantLeft = ({ participantId }: ParticipantLeftPayload) =>
@@ -123,7 +173,7 @@ export function joinRoom(roomCode: string, displayName: string): () => void {
     );
   const onVotesRevealed = ({ votes, stats }: VotesRevealedPayload) =>
     useRoomStore.setState(({ room }) =>
-      room ? { room: { ...room, phase: 'revealed', votes, stats } } : {},
+      room ? { room: { ...room, phase: 'revealed', votes, stats }, timerEndsAt: null } : {},
     );
   const onRoundReset = () =>
     useRoomStore.setState(({ room }) =>
@@ -137,9 +187,15 @@ export function joinRoom(roomCode: string, displayName: string): () => void {
               myVote: null,
               players: room.players.map((p) => ({ ...p, hasVoted: false })),
             },
+            timerEndsAt: null,
           }
         : {},
     );
+  const onStoryChanged = ({ story }: StoryChangedPayload) =>
+    useRoomStore.setState(({ room }) => (room ? { room: { ...room, story } } : {}));
+  const onTimerStarted = ({ remainingMs }: TimerStartedPayload) =>
+    useRoomStore.setState({ timerEndsAt: timerEndsFrom(remainingMs) });
+  const onTimerStopped = () => useRoomStore.setState({ timerEndsAt: null });
   const onError = ({ message }: ErrorPayload) => {
     if (FATAL_ERRORS.has(message)) {
       useRoomStore.setState({ error: message });
@@ -158,6 +214,9 @@ export function joinRoom(roomCode: string, displayName: string): () => void {
   socket.on(SERVER_EVENTS.VOTE_CAST, onVoteCast);
   socket.on(SERVER_EVENTS.VOTES_REVEALED, onVotesRevealed);
   socket.on(SERVER_EVENTS.ROUND_RESET, onRoundReset);
+  socket.on(SERVER_EVENTS.STORY_CHANGED, onStoryChanged);
+  socket.on(SERVER_EVENTS.TIMER_STARTED, onTimerStarted);
+  socket.on(SERVER_EVENTS.TIMER_STOPPED, onTimerStopped);
   socket.on(SERVER_EVENTS.ERROR, onError);
 
   if (socket.connected) emitJoin();
@@ -172,9 +231,18 @@ export function joinRoom(roomCode: string, displayName: string): () => void {
     socket.off(SERVER_EVENTS.VOTE_CAST, onVoteCast);
     socket.off(SERVER_EVENTS.VOTES_REVEALED, onVotesRevealed);
     socket.off(SERVER_EVENTS.ROUND_RESET, onRoundReset);
+    socket.off(SERVER_EVENTS.STORY_CHANGED, onStoryChanged);
+    socket.off(SERVER_EVENTS.TIMER_STARTED, onTimerStarted);
+    socket.off(SERVER_EVENTS.TIMER_STOPPED, onTimerStopped);
     socket.off(SERVER_EVENTS.ERROR, onError);
     socket.disconnect();
     clearTimeout(noticeTimer);
-    useRoomStore.setState({ room: null, connected: false, error: null, notice: null });
+    useRoomStore.setState({
+      room: null,
+      connected: false,
+      error: null,
+      notice: null,
+      timerEndsAt: null,
+    });
   };
 }

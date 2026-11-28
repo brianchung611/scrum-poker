@@ -8,6 +8,10 @@ export const CLIENT_EVENTS = {
   RESET_ROUND: 'reset_round',
   KICK_PARTICIPANT: 'kick_participant',
   CHANGE_DECK: 'change_deck',
+  SET_STORY: 'set_story',
+  TRANSFER_FACILITATOR: 'transfer_facilitator',
+  START_TIMER: 'start_timer',
+  STOP_TIMER: 'stop_timer',
 } as const;
 
 // Server -> Client
@@ -18,12 +22,17 @@ export const SERVER_EVENTS = {
   VOTE_CAST: 'vote_cast',
   VOTES_REVEALED: 'votes_revealed',
   ROUND_RESET: 'round_reset',
+  STORY_CHANGED: 'story_changed',
+  TIMER_STARTED: 'timer_started',
+  TIMER_STOPPED: 'timer_stopped',
   ERROR: 'error',
 } as const;
 
 export interface JoinRoomPayload {
   roomCode: string;
   displayName: string;
+  /** Join without voting. */
+  observer?: boolean;
 }
 
 export interface CastVotePayload {
@@ -40,9 +49,31 @@ export interface ChangeDeckPayload {
   customCards?: CardValue[];
 }
 
+export interface SetStoryPayload {
+  story: string;
+}
+
+export interface TransferFacilitatorPayload {
+  participantId: string;
+}
+
+export interface StartTimerPayload {
+  seconds: number;
+}
+
+export interface StoryChangedPayload {
+  story: string;
+}
+
+export interface TimerStartedPayload {
+  /** Remaining time rather than an end timestamp, so client clock skew doesn't matter. */
+  remainingMs: number;
+}
+
 export interface ParticipantJoinedPayload {
   participantId: string;
   displayName: string;
+  isObserver: boolean;
 }
 
 export interface ParticipantLeftPayload {
