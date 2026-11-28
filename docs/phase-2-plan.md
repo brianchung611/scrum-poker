@@ -6,7 +6,7 @@ Phase 1 (Milestones 1–5, see [implementation-plan.md](./implementation-plan.md
 
 | # | Task | Branch | Status | PR |
 |---|---|---|---|---|
-| P2-1 | Automated tests + CI | `phase2-1-tests-ci` | 🔄 In review | PR_P21 |
+| P2-1 | Automated tests + CI | `phase2-1-tests-ci` | 🔄 In review | [#8](https://github.com/brianchung611/scrum-poker/pull/8) |
 | P2-2 | Deployment prep | `phase2-2-deployment` | ⬜ Next (after P2-1 merges) | — |
 | P2-3 | Persistent player identity | `phase2-3-player-identity` | ⬜ | — |
 | P2-4 | Abuse limits | `phase2-4-abuse-limits` | ⬜ | — |
