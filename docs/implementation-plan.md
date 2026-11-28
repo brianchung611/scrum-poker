@@ -10,7 +10,7 @@ Working plan for building Scrum Poker from [scrum-poker-prd.md](../scrum-poker-p
 | 2 | Room lifecycle | Create room, join by code, live participant list, reconnection recovery | ✅ Done | [#3](https://github.com/brianchung611/scrum-poker/pull/3) |
 | 3 | Voting core (**MVP**) | Card deck, private voting, facilitator reveal, stats, round reset | ✅ Done | [#4](https://github.com/brianchung611/scrum-poker/pull/4) |
 | 4 | Polish | Round reset*, kick, mobile layout, deck selection, room expiry, language switcher UI* | ✅ Done | [#5](https://github.com/brianchung611/scrum-poker/pull/5) |
-| 5 | P1 features | Observer mode, story name, facilitator transfer, timer | 🔄 In review | PR_M5 |
+| 5 | P1 features | Observer mode, story name, facilitator transfer, timer | 🔄 In review | [#6](https://github.com/brianchung611/scrum-poker/pull/6) |
 
 \* Round reset is built in M3 (needed for a usable MVP loop). The language switcher already exists from M1. M4 covers what's left of the PRD's M4 row.
 
