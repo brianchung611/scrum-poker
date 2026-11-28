@@ -6,8 +6,8 @@ Phase 1 (Milestones 1–5, see [implementation-plan.md](./implementation-plan.md
 
 | # | Task | Branch | Status | PR |
 |---|---|---|---|---|
-| P2-1 | Automated tests + CI | `phase2-1-tests-ci` | ⬜ Next | — |
-| P2-2 | Deployment prep | `phase2-2-deployment` | ⬜ | — |
+| P2-1 | Automated tests + CI | `phase2-1-tests-ci` | 🔄 In review | PR_P21 |
+| P2-2 | Deployment prep | `phase2-2-deployment` | ⬜ Next (after P2-1 merges) | — |
 | P2-3 | Persistent player identity | `phase2-3-player-identity` | ⬜ | — |
 | P2-4 | Abuse limits | `phase2-4-abuse-limits` | ⬜ | — |
 
@@ -33,6 +33,13 @@ When a task is done, update the table here (✅ + PR link) in that task's PR.
 - Add a root `test` script and a "Testing" section to the README. Update the workflow rules in `implementation-plan.md`: tests now exist, new behavior needs tests, and CI must be green before asking for a merge.
 
 **Out of scope:** coverage thresholds, Playwright, any behavior change.
+
+**As built (notes for later tasks):**
+- Tests live next to the code as `*.test.ts`; `shared` is aliased to its **source** in `vitest.config.ts`, so tests need no prior build. `shared`/`backend` exclude tests (and `src/testing/**`) from the build output via `tsconfig.json` and typecheck them through `tsconfig.test.json`.
+- Backend now has `src/server.ts` (`createServer(config)` → `{ app, httpServer, io, close }`, no listening) and a thin `src/index.ts`. `resetRooms()` in `rooms.ts` is a test helper. Add new routes/middleware in `server.ts`.
+- Integration tests use `TestClient.sync()`, a round-trip barrier (a deliberately failing `join_room` to an unknown room), instead of sleeping. Don't assert "no event" without `sync()`ing the sender and then the receiver.
+- Small refactors done for testability: `isNumericCard` moved to `shared/decks.ts` (was duplicated in backend and frontend) and the outlier rule is `frontend/src/lib/outliers.ts`.
+- The throwaway socket scripts from M2–M5 are fully superseded by `server.test.ts`.
 
 **Done when:** `npm test` passes locally and in CI; the CI check shows on the PR; deliberately breaking a rule (e.g. let `cast_vote` leak a value) makes a test fail (check this once, then revert).
 

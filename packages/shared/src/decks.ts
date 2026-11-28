@@ -9,6 +9,13 @@ export const PRESET_DECKS: Record<PresetDeckId, CardValue[]> = {
 export const DECK_IDS: DeckId[] = ['fibonacci', 'tshirt', 'powers_of_2', 'custom'];
 export const DEFAULT_DECK: DeckId = 'fibonacci';
 
+const NUMERIC_CARD = /^\d+(\.\d+)?$/;
+
+/** True for cards that count towards stats (`5`, `0.5`); false for `?`, `☕`, `XL`, etc. */
+export function isNumericCard(card: CardValue): boolean {
+  return NUMERIC_CARD.test(card);
+}
+
 export const MIN_CUSTOM_CARDS = 2;
 export const MAX_CUSTOM_CARDS = 20;
 export const MAX_CARD_LENGTH = 5;

@@ -1,5 +1,6 @@
 import type { CardValue, Player, RoomPhase, VoteStats } from '@scrum-poker/shared';
 import { useTranslation } from 'react-i18next';
+import { countNumericVotes, isOutlier } from '../lib/outliers';
 
 interface Props {
   players: Player[];
@@ -13,8 +14,6 @@ interface Props {
   stats?: VoteStats;
 }
 
-const NUMERIC = /^\d+(\.\d+)?$/;
-
 export function ParticipantList({
   players,
   myId,
@@ -27,16 +26,7 @@ export function ParticipantList({
   const { t } = useTranslation('game');
   const revealed = phase === 'revealed';
 
-  // The highest and lowest votes are flagged to prompt discussion, but only when
-  // at least three numeric votes were cast and they actually disagree.
-  const numericCount = Object.values(votes ?? {}).filter((v) => NUMERIC.test(v)).length;
-  const isOutlier = (value: CardValue | undefined) =>
-    value !== undefined &&
-    NUMERIC.test(value) &&
-    numericCount >= 3 &&
-    stats?.min != null &&
-    stats.max !== stats.min &&
-    (Number(value) === stats.min || Number(value) === stats.max);
+  const numericCount = countNumericVotes(votes);
 
   return (
     <section aria-labelledby="participants-heading" className="panel">
@@ -44,7 +34,7 @@ export function ParticipantList({
       <ul className="participants">
         {players.map((player) => {
           const value = revealed ? votes?.[player.id] : undefined;
-          const outlier = isOutlier(value);
+          const outlier = isOutlier(value, stats, numericCount);
           return (
             <li key={player.id} className="participant">
               <span className="participant-name">{player.displayName}</span>

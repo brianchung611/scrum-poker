@@ -52,6 +52,11 @@ export function createRoom(deck: { deckId: DeckId; cards: CardValue[] }): Room {
   return room;
 }
 
+/** Test helper: forget every room. */
+export function resetRooms(): void {
+  rooms.clear();
+}
+
 export function getRoom(code: string): Room | undefined {
   return rooms.get(code);
 }
