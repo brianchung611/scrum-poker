@@ -9,6 +9,11 @@ export type DeckId = PresetDeckId | 'custom';
 
 export const MAX_DISPLAY_NAME_LENGTH = 30;
 export const ROOM_CODE_LENGTH = 6;
+export const MAX_STORY_LENGTH = 100;
+export const TIMER_MIN_SECONDS = 5;
+export const TIMER_MAX_SECONDS = 600;
+/** Durations offered in the UI. */
+export const TIMER_PRESETS_SECONDS = [30, 60, 120, 300] as const;
 
 export interface CreateRoomRequest {
   deckId?: DeckId;
@@ -26,6 +31,8 @@ export interface Player {
   id: string;
   displayName: string;
   isFacilitator: boolean;
+  /** Observers watch the round but don't vote and aren't counted. */
+  isObserver: boolean;
   hasVoted: boolean;
 }
 
@@ -42,6 +49,10 @@ export interface RoomState {
   /** The cards players can pick from, in display order. */
   cards: CardValue[];
   phase: RoomPhase;
+  /** Label for the current round; empty if none. */
+  story: string;
+  /** Running (or expired) countdown for the voting phase; null when there is none. */
+  timer: { remainingMs: number } | null;
   players: Player[];
   facilitatorId: string | null;
   myId: string;

@@ -31,7 +31,10 @@
     "invalid_deck": "此牌组无效。",
     "invalid_participant": "无法移除该参与者。",
     "kicked": "主持人已将你移出房间。",
-    "room_expired": "此房间因闲置过久已过期。"
+    "room_expired": "此房间因闲置过久已过期。",
+    "observer_cannot_vote": "观察者无法投票。",
+    "invalid_story": "故事名称太长。",
+    "invalid_timer": "计时器设置无效。"
   },
   "deck": "牌组",
   "customCards": "卡牌",
@@ -42,5 +45,6 @@
     "tshirt": "T 恤尺码 (XS–XXL)",
     "powers_of_2": "2 的幂 (1, 2, 4, 8…)",
     "custom": "自定义"
-  }
+  },
+  "joinAsObserver": "以观察者身份加入（只观看、不投票）"
 }

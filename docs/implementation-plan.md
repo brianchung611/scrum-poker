@@ -9,12 +9,12 @@ Working plan for building Scrum Poker from [scrum-poker-prd.md](../scrum-poker-p
 | 1 | Scaffold | Monorepo, shared types, Express + Socket.io, React + Vite, Railway config, i18next + 3 locales | ✅ Done | [#1](https://github.com/brianchung611/scrum-poker/pull/1) |
 | 2 | Room lifecycle | Create room, join by code, live participant list, reconnection recovery | ✅ Done | [#3](https://github.com/brianchung611/scrum-poker/pull/3) |
 | 3 | Voting core (**MVP**) | Card deck, private voting, facilitator reveal, stats, round reset | ✅ Done | [#4](https://github.com/brianchung611/scrum-poker/pull/4) |
-| 4 | Polish | Round reset*, kick, mobile layout, deck selection, room expiry, language switcher UI* | 🔄 In review | [#5](https://github.com/brianchung611/scrum-poker/pull/5) |
-| 5 | P1 features | Observer mode, story name, facilitator transfer, timer | ⬜ Not started (needs user go-ahead) | — |
+| 4 | Polish | Round reset*, kick, mobile layout, deck selection, room expiry, language switcher UI* | ✅ Done | [#5](https://github.com/brianchung611/scrum-poker/pull/5) |
+| 5 | P1 features | Observer mode, story name, facilitator transfer, timer | 🔄 In review | [#6](https://github.com/brianchung611/scrum-poker/pull/6) |
 
 \* Round reset is built in M3 (needed for a usable MVP loop). The language switcher already exists from M1. M4 covers what's left of the PRD's M4 row.
 
-Agreed scope so far: **Milestones 1–4** (the user asked to continue after the M3 MVP). M5 (P1 features) hasn't been requested yet; ask before starting it.
+Agreed scope so far: **Milestones 1–5**, i.e. everything in the PRD's milestone table. Once M5 is merged the planned work is done; anything further (Later list below) needs a new request.
 
 ## Workflow rules
 
@@ -40,16 +40,16 @@ Agreed scope so far: **Milestones 1–4** (the user asked to continue after the 
 - **Room expiry (TTL cleanup)** is M4; keep a `lastActivity` timestamp on the room model so it's a small addition later.
 - **Railway**: config only (`railway.json`); not deployed, no credentials available.
 
-## Current codebase (after M4)
+## Current codebase (after M5)
 
 ```
 packages/
   shared/    decks.ts (presets, custom-deck validation, resolveDeck), types.ts (Locale, Player, RoomState incl. myVote/votes/stats, VoteStats, CreateRoomResponse, limits…), events.ts (CLIENT_EVENTS / SERVER_EVENTS + payload types)
   backend/   index.ts (Express: /health, POST /api/rooms; Socket.io), rooms.ts (in-memory Map<code, Room>, add/remove player,
-             facilitator promotion, castVote/revealVotes/resetRound/changeDeck, expireRooms, toRoomState(room, myId)), roomCode.ts, stats.ts, cleanup.ts,
-             socketHandlers.ts (join_room, cast_vote, reveal_votes, reset_round, change_deck, kick_participant, disconnect)
+             facilitator promotion, castVote/revealVotes/resetRound/changeDeck, setStory, transferFacilitator, start/stopTimer, expireRooms, toRoomState(room, myId)), roomCode.ts, stats.ts, cleanup.ts,
+             socketHandlers.ts (join_room, cast_vote, reveal_votes, reset_round, change_deck, kick_participant, set_story, transfer_facilitator, start_timer, stop_timer, disconnect)
   frontend/  App.tsx (BrowserRouter, Suspense), pages/{HomePage,RoomPage}, components/{Header,LanguageSwitcher,NameForm,ParticipantList},
-             components/{CardDeck,RoundControls,VoteStats,DeckPicker,DeckSettings}, store/useRoomStore.ts (Zustand + joinRoom(code, name) → cleanup fn,
+             components/{CardDeck,RoundControls,VoteStats,DeckPicker,DeckSettings,StoryPanel,TimerPanel}, store/useRoomStore.ts (Zustand + joinRoom(code, name) → cleanup fn,
              castVote/revealVotes/resetRound), socket/socket.ts, api.ts, session.ts (sessionStorage name),
              i18n.ts, public/locales/{en,zh-TW,zh-CN}/{common,game}.json
 railway.json, .claude/launch.json, tsconfig.base.json (strict, Bundler resolution)
@@ -91,6 +91,15 @@ railway.json, .claude/launch.json, tsconfig.base.json (strict, Bundler resolutio
 - New error codes in all 3 `common.json`: `invalid_deck`, `invalid_participant`, `kicked`, `room_expired`.
 - Mobile/responsive and the language switcher were already in place from M1–M3, so M4 only verified them with the new controls.
 - Gotcha: editing frontend files while several tabs are open makes Vite live-reload them all, so every client rejoins (the first to reconnect becomes facilitator). Don't edit code mid-way through a multi-tab manual test.
+
+### M5 implementation notes
+
+- **Observer mode**: chosen with a checkbox when creating/joining (and on the shared-link name prompt); `join_room` carries `observer`, stored in `sessionStorage` so a refresh keeps the role. Observers don't vote (`observer_cannot_vote`), aren't counted in "Waiting for votes (x/y)", see no deck, and get an Observer badge. There is no in-room toggle (rejoin to change roles). An observer can still be (or become) facilitator.
+- **Story name**: facilitator-only (`set_story`, max 100 chars), broadcast as `story_changed`, included in `room_state`. It is cleared by **New round** (a stale label would silently mislead) but kept across deck changes and reveals.
+- **Facilitator transfer**: `transfer_facilitator` (facilitator-only; not self; target must be in the room); the server resends `room_state` to everyone. ★ button per participant with a confirm.
+- **Timer**: facilitator starts one of 30s / 1m / 2m / 5m (`start_timer`, any integer 5–600 s accepted by the server) during voting; server stores `timerEndsAt` and sends **remaining ms** (not a timestamp) so client clocks don't matter; clients count down locally. It is advisory: nothing auto-reveals at 0 ("Time's up!"). Cleared by reveal, new round, deck change and `stop_timer`. Snapshots carry `timer.remainingMs`, so late joiners see it.
+- New error codes in all 3 `common.json`: `observer_cannot_vote`, `invalid_story`, `invalid_timer`.
+- Participant rows have a fixed min-height so observer rows (no card slot) line up.
 
 ## Milestone 2 — Room lifecycle (built; plan kept for reference)
 
@@ -135,6 +144,9 @@ railway.json, .claude/launch.json, tsconfig.base.json (strict, Bundler resolutio
 
 ## Later (not yet scheduled)
 
-- **M4 Polish**: deck selection (Fibonacci / T-shirt / powers of 2 / custom) at creation and changeable by the facilitator, kick participant, mobile-responsive pass, room TTL cleanup (~2h inactivity, `setInterval` sweep), any remaining switcher/layout polish.
-- **M5 P1 features**: observer mode, story name field, facilitator transfer, countdown timer.
+All five PRD milestones are built once M5 merges. Ideas deliberately left out so far:
+
+- Deploying (Railway/Vercel config exists; nothing is deployed), an SPA fallback on the frontend host, and a CI workflow.
+- Automated tests (verification has been manual + ad-hoc socket scripts).
+- Rejoin identity (so a refreshed facilitator keeps the role and a kicked player stays out), an in-room observer toggle, a styled confirm dialog instead of `window.confirm`.
 - Out of scope for v1 per the PRD: vote history, accounts, Jira/Linear integration, native mobile, self-hosting.

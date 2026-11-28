@@ -11,7 +11,12 @@ import {
   type DeckChoice,
 } from '../components/DeckPicker';
 import { NameForm } from '../components/NameForm';
-import { getStoredDisplayName, storeDisplayName } from '../session';
+import {
+  getStoredDisplayName,
+  getStoredObserver,
+  storeDisplayName,
+  storeObserver,
+} from '../session';
 
 export default function HomePage() {
   const { t } = useTranslation('common');
@@ -22,8 +27,9 @@ export default function HomePage() {
   const [code, setCode] = useState('');
   const codeId = useId();
   const initialName = getStoredDisplayName();
+  const initialObserver = getStoredObserver();
 
-  const handleCreate = async (displayName: string) => {
+  const handleCreate = async (displayName: string, observer: boolean) => {
     setCreating(true);
     setCreateError(null);
     try {
@@ -32,6 +38,7 @@ export default function HomePage() {
         customCards: deck.deckId === 'custom' ? (customCardsOf(deck) ?? undefined) : undefined,
       });
       storeDisplayName(displayName);
+      storeObserver(observer);
       navigate(`/room/${roomCode}`);
     } catch {
       setCreateError(t('createFailed'));
@@ -39,8 +46,9 @@ export default function HomePage() {
     }
   };
 
-  const handleJoin = (displayName: string) => {
+  const handleJoin = (displayName: string, observer: boolean) => {
     storeDisplayName(displayName);
+    storeObserver(observer);
     navigate(`/room/${code.trim().toUpperCase()}`);
   };
 
@@ -58,6 +66,8 @@ export default function HomePage() {
           busy={creating || !isDeckChoiceValid(deck)}
           error={createError}
           initialName={initialName}
+          allowObserver
+          initialObserver={initialObserver}
           onSubmit={handleCreate}
         >
           <DeckPicker value={deck} onChange={setDeck} />
@@ -68,6 +78,8 @@ export default function HomePage() {
           submitLabel={t('join')}
           busy={!code.trim()}
           initialName={initialName}
+          allowObserver
+          initialObserver={initialObserver}
           onSubmit={handleJoin}
         >
           <label htmlFor={codeId}>{t('roomCode')}</label>

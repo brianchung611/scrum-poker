@@ -10,8 +10,11 @@ interface Props {
   error?: string | null;
   /** Extra fields rendered after the display name (e.g. the room code). */
   children?: ReactNode;
-  onSubmit: (displayName: string) => void;
+  onSubmit: (displayName: string, observer: boolean) => void;
   initialName?: string;
+  /** Show a "join as observer" checkbox. */
+  allowObserver?: boolean;
+  initialObserver?: boolean;
 }
 
 export function NameForm({
@@ -23,15 +26,19 @@ export function NameForm({
   children,
   onSubmit,
   initialName = '',
+  allowObserver = false,
+  initialObserver = false,
 }: Props) {
   const { t } = useTranslation('common');
   const [name, setName] = useState(initialName);
+  const [observer, setObserver] = useState(initialObserver);
   const nameId = useId();
+  const observerId = useId();
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     const trimmed = name.trim();
-    if (trimmed) onSubmit(trimmed);
+    if (trimmed) onSubmit(trimmed, allowObserver && observer);
   };
 
   return (
@@ -48,6 +55,17 @@ export function NameForm({
         required
       />
       {children}
+      {allowObserver && (
+        <div className="checkbox">
+          <input
+            id={observerId}
+            type="checkbox"
+            checked={observer}
+            onChange={(event) => setObserver(event.target.checked)}
+          />
+          <label htmlFor={observerId}>{t('joinAsObserver')}</label>
+        </div>
+      )}
       {error && (
         <p role="alert" className="error">
           {error}

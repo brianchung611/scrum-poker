@@ -33,5 +33,24 @@
   "kick": "Remove {{name}}",
   "kickConfirm": "Remove {{name}} from the room?",
   "tallyCount_one": "{{count}} vote",
-  "tallyCount_other": "{{count}} votes"
+  "tallyCount_other": "{{count}} votes",
+  "observer": "Observer",
+  "observing": "You're observing",
+  "observerHint": "Observers watch the round but don't vote.",
+  "story": "Story",
+  "storyPlaceholder": "What are we estimating? e.g. PROJ-42 Login page",
+  "storySave": "Set",
+  "makeFacilitator": "Make {{name}} the facilitator",
+  "transferConfirm": "Make {{name}} the facilitator? You'll lose the facilitator controls.",
+  "timer": "Timer",
+  "timerStart": "Start timer",
+  "timerStop": "Stop timer",
+  "timerDuration": "Timer length",
+  "timeUp": "Time's up!",
+  "timerPreset": {
+    "30": "30 seconds",
+    "60": "1 minute",
+    "120": "2 minutes",
+    "300": "5 minutes"
+  }
 }

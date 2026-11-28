@@ -9,6 +9,11 @@ import {
   type KickParticipantPayload,
   type ParticipantJoinedPayload,
   type ParticipantLeftPayload,
+  type SetStoryPayload,
+  type StartTimerPayload,
+  type StoryChangedPayload,
+  type TimerStartedPayload,
+  type TransferFacilitatorPayload,
   type VoteCastPayload,
   type VotesRevealedPayload,
 } from '@scrum-poker/shared';
@@ -22,7 +27,11 @@ import {
   removePlayer,
   resetRound,
   revealVotes,
+  setStory,
+  startTimer,
+  stopTimer,
   toRoomState,
+  transferFacilitator,
   type Room,
 } from './rooms.js';
 
@@ -110,7 +119,7 @@ export function registerSocketHandlers(io: Server): void {
       // Joining a different room: leave the previous one first.
       leaveCurrentRoom(io, socket);
 
-      const player = addPlayer(room, socket.id, displayName);
+      const player = addPlayer(room, socket.id, displayName, payload?.observer === true);
       data.roomCode = room.code;
       void socket.join(room.code);
 
@@ -120,6 +129,7 @@ export function registerSocketHandlers(io: Server): void {
       const joined: ParticipantJoinedPayload = {
         participantId: player.id,
         displayName: player.displayName,
+        isObserver: player.isObserver,
       };
       socket.to(room.code).emit(SERVER_EVENTS.PARTICIPANT_JOINED, joined);
     });
@@ -130,7 +140,14 @@ export function registerSocketHandlers(io: Server): void {
 
       const result = castVote(room, socket.id, String(payload?.value ?? ''));
       if (result !== 'ok') {
-        sendError(socket, result === 'not_voting' ? 'round_not_voting' : result);
+        sendError(
+          socket,
+          result === 'not_voting'
+            ? 'round_not_voting'
+            : result === 'observer'
+              ? 'observer_cannot_vote'
+              : result,
+        );
         return;
       }
       // Only the fact that a vote exists is broadcast, never its value.
@@ -150,8 +167,13 @@ export function registerSocketHandlers(io: Server): void {
       const room = facilitatorRoom(socket);
       if (!room) return;
 
-      resetRound(room);
+      const hadStory = room.story !== '';
+      resetRound(room, true);
       io.to(room.code).emit(SERVER_EVENTS.ROUND_RESET);
+      if (hadStory) {
+        const cleared: StoryChangedPayload = { story: '' };
+        io.to(room.code).emit(SERVER_EVENTS.STORY_CHANGED, cleared);
+      }
     });
 
     socket.on(CLIENT_EVENTS.CHANGE_DECK, (payload: Partial<ChangeDeckPayload> | undefined) => {
@@ -185,6 +207,58 @@ export function registerSocketHandlers(io: Server): void {
         leaveCurrentRoom(io, target);
       },
     );
+
+    socket.on(CLIENT_EVENTS.SET_STORY, (payload: Partial<SetStoryPayload> | undefined) => {
+      const room = facilitatorRoom(socket);
+      if (!room) return;
+
+      if (!setStory(room, String(payload?.story ?? ''))) {
+        sendError(socket, 'invalid_story');
+        return;
+      }
+      const changed: StoryChangedPayload = { story: room.story };
+      io.to(room.code).emit(SERVER_EVENTS.STORY_CHANGED, changed);
+    });
+
+    socket.on(
+      CLIENT_EVENTS.TRANSFER_FACILITATOR,
+      (payload: Partial<TransferFacilitatorPayload> | undefined) => {
+        const room = facilitatorRoom(socket);
+        if (!room) return;
+
+        if (!transferFacilitator(room, String(payload?.participantId ?? ''))) {
+          sendError(socket, 'invalid_participant');
+          return;
+        }
+        // Clients learn who the facilitator is from room_state.
+        for (const playerId of room.players.keys()) sendRoomState(io, room, playerId);
+      },
+    );
+
+    socket.on(CLIENT_EVENTS.START_TIMER, (payload: Partial<StartTimerPayload> | undefined) => {
+      const room = facilitatorRoom(socket);
+      if (!room) return;
+      if (room.phase !== 'voting') {
+        sendError(socket, 'round_not_voting');
+        return;
+      }
+
+      const remainingMs = startTimer(room, payload?.seconds, Date.now());
+      if (remainingMs === null) {
+        sendError(socket, 'invalid_timer');
+        return;
+      }
+      const started: TimerStartedPayload = { remainingMs };
+      io.to(room.code).emit(SERVER_EVENTS.TIMER_STARTED, started);
+    });
+
+    socket.on(CLIENT_EVENTS.STOP_TIMER, () => {
+      const room = facilitatorRoom(socket);
+      if (!room) return;
+
+      stopTimer(room);
+      io.to(room.code).emit(SERVER_EVENTS.TIMER_STOPPED);
+    });
 
     socket.on('disconnect', () => {
       leaveCurrentRoom(io, socket);

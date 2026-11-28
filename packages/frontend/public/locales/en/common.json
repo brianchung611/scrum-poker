@@ -31,7 +31,10 @@
     "invalid_deck": "That deck isn't valid.",
     "invalid_participant": "That participant can't be removed.",
     "kicked": "The facilitator removed you from the room.",
-    "room_expired": "This room expired after a period of inactivity."
+    "room_expired": "This room expired after a period of inactivity.",
+    "observer_cannot_vote": "Observers can't vote.",
+    "invalid_story": "That story name is too long.",
+    "invalid_timer": "That timer isn't valid."
   },
   "deck": "Card deck",
   "customCards": "Cards",
@@ -42,5 +45,6 @@
     "tshirt": "T-shirt sizes (XS–XXL)",
     "powers_of_2": "Powers of 2 (1, 2, 4, 8…)",
     "custom": "Custom"
-  }
+  },
+  "joinAsObserver": "Join as observer (watch without voting)"
 }

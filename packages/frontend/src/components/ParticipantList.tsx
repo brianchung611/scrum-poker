@@ -6,6 +6,8 @@ interface Props {
   myId: string;
   /** When set, a remove button is shown on every other participant. */
   onKick?: (player: Player) => void;
+  /** When set, a "make facilitator" button is shown on every other participant. */
+  onTransfer?: (player: Player) => void;
   phase: RoomPhase;
   votes?: Record<string, CardValue>;
   stats?: VoteStats;
@@ -13,7 +15,15 @@ interface Props {
 
 const NUMERIC = /^\d+(\.\d+)?$/;
 
-export function ParticipantList({ players, myId, onKick, phase, votes, stats }: Props) {
+export function ParticipantList({
+  players,
+  myId,
+  onKick,
+  onTransfer,
+  phase,
+  votes,
+  stats,
+}: Props) {
   const { t } = useTranslation('game');
   const revealed = phase === 'revealed';
 
@@ -39,7 +49,19 @@ export function ParticipantList({ players, myId, onKick, phase, votes, stats }: 
             <li key={player.id} className="participant">
               <span className="participant-name">{player.displayName}</span>
               {player.isFacilitator && <span className="badge">{t('facilitator')}</span>}
+              {player.isObserver && <span className="badge badge-observer">{t('observer')}</span>}
               {player.id === myId && <span className="badge badge-muted">{t('you')}</span>}
+              {onTransfer && player.id !== myId && (
+                <button
+                  type="button"
+                  className="kick"
+                  aria-label={t('makeFacilitator', { name: player.displayName })}
+                  title={t('makeFacilitator', { name: player.displayName })}
+                  onClick={() => onTransfer(player)}
+                >
+                  ★
+                </button>
+              )}
               {onKick && player.id !== myId && (
                 <button
                   type="button"
@@ -52,7 +74,7 @@ export function ParticipantList({ players, myId, onKick, phase, votes, stats }: 
                 </button>
               )}
               <span className="vote-slot">
-                {player.hasVoted ? (
+                {player.isObserver ? null : player.hasVoted ? (
                   // One element across the reveal so the face-down card animates into the value.
                   // The value is only rendered once the server has revealed it.
                   <span
