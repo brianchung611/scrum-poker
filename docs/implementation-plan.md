@@ -7,8 +7,8 @@ Working plan for building Scrum Poker from [scrum-poker-prd.md](../scrum-poker-p
 | # | Milestone | PRD scope | Status | PR |
 |---|---|---|---|---|
 | 1 | Scaffold | Monorepo, shared types, Express + Socket.io, React + Vite, Railway config, i18next + 3 locales | ✅ Done | [#1](https://github.com/brianchung611/scrum-poker/pull/1) |
-| 2 | Room lifecycle | Create room, join by code, live participant list, reconnection recovery | 🔄 In review | [#3](https://github.com/brianchung611/scrum-poker/pull/3) |
-| 3 | Voting core (**MVP**) | Card deck, private voting, facilitator reveal, stats | ⬜ Next (after M2 merges) | — |
+| 2 | Room lifecycle | Create room, join by code, live participant list, reconnection recovery | ✅ Done | [#3](https://github.com/brianchung611/scrum-poker/pull/3) |
+| 3 | Voting core (**MVP**) | Card deck, private voting, facilitator reveal, stats, round reset | 🔄 In review | [#4](https://github.com/brianchung611/scrum-poker/pull/4) |
 | 4 | Polish | Round reset*, kick, mobile layout, deck selection, room expiry, language switcher UI* | ⬜ Deferred | — |
 | 5 | P1 features | Observer mode, story name, facilitator transfer, timer | ⬜ Deferred | — |
 
@@ -24,6 +24,7 @@ Agreed scope for the current effort is **Milestones 1–3**. M4–5 are deferred
 - `gh` CLI is installed and authenticated as `brianchung611`; use `gh pr create`.
 - Verify each milestone end-to-end before opening the PR: `npm run build`, then run the app via `.claude/launch.json` (`backend` on :4000, `frontend` on :5173) and exercise the flow in the browser preview with two clients. No automated test framework has been added; manual verification is the agreed approach.
 - PR body: Summary, Notes (call out deliberate simplifications), Test plan checklist.
+- **Screenshots**: attach them for major UI changes (new pages/components, notable layout or visual changes); skip only for wording or minor position tweaks. `gh` can't upload images, so commit them to the orphan `pr-assets` branch (one folder per milestone, e.g. `m3/`, via a scratch clone of that branch) and embed `https://raw.githubusercontent.com/brianchung611/scrum-poker/pr-assets/<folder>/<file>` links in a PR comment. Check the URLs return 200 first.
 
 ## Decisions already made (don't re-litigate)
 
@@ -39,15 +40,17 @@ Agreed scope for the current effort is **Milestones 1–3**. M4–5 are deferred
 - **Room expiry (TTL cleanup)** is M4; keep a `lastActivity` timestamp on the room model so it's a small addition later.
 - **Railway**: config only (`railway.json`); not deployed, no credentials available.
 
-## Current codebase (after M2)
+## Current codebase (after M3)
 
 ```
 packages/
-  shared/    types.ts (Locale, DECKS, Player, RoomState, VoteStats, CreateRoomResponse, limits…), events.ts (CLIENT_EVENTS / SERVER_EVENTS + payload types)
+  shared/    types.ts (Locale, DECKS, Player, RoomState incl. myVote/votes/stats, VoteStats, CreateRoomResponse, limits…), events.ts (CLIENT_EVENTS / SERVER_EVENTS + payload types)
   backend/   index.ts (Express: /health, POST /api/rooms; Socket.io), rooms.ts (in-memory Map<code, Room>, add/remove player,
-             facilitator promotion, toRoomState(room, myId)), roomCode.ts, socketHandlers.ts (join_room, disconnect)
+             facilitator promotion, castVote/revealVotes/resetRound, toRoomState(room, myId)), roomCode.ts, stats.ts,
+             socketHandlers.ts (join_room, cast_vote, reveal_votes, reset_round, disconnect)
   frontend/  App.tsx (BrowserRouter, Suspense), pages/{HomePage,RoomPage}, components/{Header,LanguageSwitcher,NameForm,ParticipantList},
-             store/useRoomStore.ts (Zustand + joinRoom(code, name) → cleanup fn), socket/socket.ts, api.ts, session.ts (sessionStorage name),
+             components/{CardDeck,RoundControls,VoteStats}, store/useRoomStore.ts (Zustand + joinRoom(code, name) → cleanup fn,
+             castVote/revealVotes/resetRound), socket/socket.ts, api.ts, session.ts (sessionStorage name),
              i18n.ts, public/locales/{en,zh-TW,zh-CN}/{common,game}.json
 railway.json, .claude/launch.json, tsconfig.base.json (strict, Bundler resolution)
 ```
@@ -67,6 +70,16 @@ railway.json, .claude/launch.json, tsconfig.base.json (strict, Bundler resolutio
 - Backend is `NodeNext` ESM, so its relative imports **need** `.js` extensions. `shared` also uses `.js` extensions in its relative imports.
 - `@scrum-poker/shared` resolves through its built `dist/`. Root `postinstall` and `predev` now build it, but if you change shared while the dev servers run (or start a single package via `.claude/launch.json`), re-run `npm run build -w @scrum-poker/shared`.
 - Root `npm run build` builds shared → backend → frontend in order.
+
+### M3 implementation notes
+
+- `RoomState` gained `myVote` (the recipient's own vote, private to them). `votes`/`stats` are only ever in a snapshot or event once `phase === 'revealed'`; the UI also never renders a value before reveal (the flip card's front face is empty).
+- Server error codes added: `not_authorised`, `invalid_vote`, `round_not_voting`, `not_in_room`. The store treats `room_not_found` / `invalid_display_name` as fatal (full-page error) and everything else as a transient `notice` banner (4s).
+- `castVote` updates the player's own `myVote` optimistically; everything else only changes from server events.
+- Outliers: the highest and lowest numeric votes are highlighted when ≥3 numeric votes were cast and min ≠ max (computed client-side from `stats`).
+- Votes of players who leave are kept once the round is revealed (so published stats stay consistent) and dropped if they leave mid-voting. Consequence: a player who refreshes after the reveal rejoins as a new player with no vote, while their old vote still counts in the stats (no-auth limitation).
+- The facilitator can click New round at any time, including mid-voting (clears all votes).
+- Reveal requires at least one vote (button disabled otherwise; the server doesn't enforce this).
 
 ## Milestone 2 — Room lifecycle (built; plan kept for reference)
 

@@ -23,6 +23,10 @@
   "errors": {
     "room_not_found": "Room not found. Check the code and try again.",
     "invalid_display_name": "Please enter a display name (up to 30 characters).",
-    "generic": "Something went wrong."
+    "generic": "Something went wrong.",
+    "not_authorised": "Only the facilitator can do that.",
+    "invalid_vote": "That card isn't in this deck.",
+    "round_not_voting": "Voting is closed. Wait for the next round.",
+    "not_in_room": "You're not in this room. Try refreshing the page."
   }
 }

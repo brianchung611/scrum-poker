@@ -2,14 +2,26 @@ import {
   CLIENT_EVENTS,
   MAX_DISPLAY_NAME_LENGTH,
   SERVER_EVENTS,
+  type CastVotePayload,
   type ErrorPayload,
   type JoinRoomPayload,
   type ParticipantJoinedPayload,
   type ParticipantLeftPayload,
+  type VoteCastPayload,
+  type VotesRevealedPayload,
 } from '@scrum-poker/shared';
 import type { Server, Socket } from 'socket.io';
 import { normalizeRoomCode } from './roomCode.js';
-import { addPlayer, getRoom, removePlayer, toRoomState, type Room } from './rooms.js';
+import {
+  addPlayer,
+  castVote,
+  getRoom,
+  removePlayer,
+  resetRound,
+  revealVotes,
+  toRoomState,
+  type Room,
+} from './rooms.js';
 
 interface SocketData {
   roomCode?: string;
@@ -22,6 +34,27 @@ function sendError(socket: Socket, message: string): void {
 
 function sendRoomState(io: Server, room: Room, playerId: string): void {
   io.to(playerId).emit(SERVER_EVENTS.ROOM_STATE, toRoomState(room, playerId));
+}
+
+/** The room this socket has joined, or an error to the client if it hasn't joined one. */
+function currentRoom(socket: Socket): Room | undefined {
+  const room = getRoom((socket.data as SocketData).roomCode ?? '');
+  if (!room || !room.players.has(socket.id)) {
+    sendError(socket, 'not_in_room');
+    return undefined;
+  }
+  return room;
+}
+
+/** Like currentRoom, but only the facilitator passes (checked server-side). */
+function facilitatorRoom(socket: Socket): Room | undefined {
+  const room = currentRoom(socket);
+  if (!room) return undefined;
+  if (room.facilitatorId !== socket.id) {
+    sendError(socket, 'not_authorised');
+    return undefined;
+  }
+  return room;
 }
 
 /** Removes the socket's player from its room and tells everyone else. */
@@ -86,6 +119,36 @@ export function registerSocketHandlers(io: Server): void {
         displayName: player.displayName,
       };
       socket.to(room.code).emit(SERVER_EVENTS.PARTICIPANT_JOINED, joined);
+    });
+
+    socket.on(CLIENT_EVENTS.CAST_VOTE, (payload: Partial<CastVotePayload> | undefined) => {
+      const room = currentRoom(socket);
+      if (!room) return;
+
+      const result = castVote(room, socket.id, String(payload?.value ?? ''));
+      if (result !== 'ok') {
+        sendError(socket, result === 'not_voting' ? 'round_not_voting' : result);
+        return;
+      }
+      // Only the fact that a vote exists is broadcast, never its value.
+      const cast: VoteCastPayload = { participantId: socket.id, hasVoted: true };
+      io.to(room.code).emit(SERVER_EVENTS.VOTE_CAST, cast);
+    });
+
+    socket.on(CLIENT_EVENTS.REVEAL_VOTES, () => {
+      const room = facilitatorRoom(socket);
+      if (!room || room.phase === 'revealed') return;
+
+      const revealed: VotesRevealedPayload = revealVotes(room);
+      io.to(room.code).emit(SERVER_EVENTS.VOTES_REVEALED, revealed);
+    });
+
+    socket.on(CLIENT_EVENTS.RESET_ROUND, () => {
+      const room = facilitatorRoom(socket);
+      if (!room) return;
+
+      resetRound(room);
+      io.to(room.code).emit(SERVER_EVENTS.ROUND_RESET);
     });
 
     socket.on('disconnect', () => {

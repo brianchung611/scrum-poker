@@ -240,3 +240,160 @@ button:disabled {
 .badge-muted {
   background: var(--border);
 }
+
+.banner-error {
+  background: #450a0a;
+  color: var(--danger);
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.controls-status {
+  margin: 0;
+  font-weight: 600;
+}
+
+.controls button.primary {
+  margin-top: 0;
+}
+
+.deck {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+}
+
+.card {
+  aspect-ratio: 2 / 3;
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  padding: 0;
+  background: var(--bg);
+  transition:
+    transform 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.card:hover:not(:disabled) {
+  transform: translateY(-4px);
+  border-color: var(--accent-hover);
+}
+
+.card-selected {
+  background: var(--accent);
+  border-color: var(--accent-hover);
+  transform: translateY(-6px);
+}
+
+.card:disabled {
+  transform: none;
+}
+
+.card-selected:disabled {
+  opacity: 0.85;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 0.75rem;
+  margin: 0.75rem 0 0;
+}
+
+.stat {
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 0.75rem;
+  text-align: center;
+}
+
+.stat dt {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.stat dd {
+  margin: 0.25rem 0 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.vote-slot {
+  margin-inline-start: auto;
+}
+
+.flip {
+  display: inline-block;
+  width: 40px;
+  height: 56px;
+  perspective: 400px;
+}
+
+.flip-inner {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.5s ease;
+}
+
+.flipped .flip-inner {
+  transform: rotateY(180deg);
+}
+
+.face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-weight: 700;
+  backface-visibility: hidden;
+}
+
+.face.back {
+  background: repeating-linear-gradient(45deg, var(--accent), var(--accent) 5px, #4f46e5 5px, #4f46e5 10px);
+  border: 2px solid var(--accent-hover);
+  color: #fff;
+}
+
+.face.front {
+  background: #f8fafc;
+  color: #0f172a;
+  border: 2px solid #f8fafc;
+  font-size: 1.25rem;
+  transform: rotateY(180deg);
+}
+
+.flip.outlier .face.front {
+  background: #fde68a;
+  border-color: #f59e0b;
+}
+
+.flip.empty .face {
+  position: static;
+  width: 100%;
+  height: 100%;
+  border: 2px dashed var(--border);
+  color: var(--muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flip-inner,
+  .card {
+    transition: none;
+  }
+}
