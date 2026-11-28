@@ -1,6 +1,6 @@
 # Scrum Poker
 
-Real-time, browser-based planning poker. See [scrum-poker-prd.md](./scrum-poker-prd.md) for the full product spec, and [docs/implementation-plan.md](./docs/implementation-plan.md) for milestone progress and the plan for what's next.
+Real-time, browser-based planning poker. See [scrum-poker-prd.md](./scrum-poker-prd.md) for the full product spec, [docs/implementation-plan.md](./docs/implementation-plan.md) for the milestone history, and [docs/phase-2-plan.md](./docs/phase-2-plan.md) for the plan for what's next (tests/CI, deployment, reconnect identity, abuse limits).
 
 ## Structure
 
