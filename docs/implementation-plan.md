@@ -22,7 +22,8 @@ Working plan for building Scrum Poker from [scrum-poker-prd.md](../scrum-poker-p
 - **Sequential, merge-as-we-go**: open the PR, then stop and wait for the user to review/merge. Never merge it yourself unless told to. Branch the next milestone only after the previous one is merged.
 - Never push directly to `main` (the single bootstrap commit of the PRD was the one-off exception).
 - `gh` CLI is installed and authenticated as `brianchung611`; use `gh pr create`.
-- Verify each milestone end-to-end before opening the PR: `npm run build`, then run the app via `.claude/launch.json` (`backend` on :4000, `frontend` on :5173) and exercise the flow in the browser preview with two clients. No automated test framework has been added; manual verification is the agreed approach.
+- Verify each change before opening the PR: `npm run build`, `npm run typecheck` and `npm test` must pass (CI runs the same three on every PR; wait for it to be green), then run the app via `.claude/launch.json` (`backend` on :4000, `frontend` on :5173) and exercise the flow in the browser preview with two clients.
+- **New behavior needs tests** (since Phase 2 / P2-1): unit tests for pure logic, and an integration test in `packages/backend/src/server.test.ts` (using `src/testing/harness.ts`) for anything on the socket protocol. Don't edit code while multiple preview tabs are open (Vite live-reloads them all and everyone rejoins).
 - PR body: Summary, Notes (call out deliberate simplifications), Test plan checklist.
 - **Screenshots**: attach them for major UI changes (new pages/components, notable layout or visual changes); skip only for wording or minor position tweaks. `gh` can't upload images, so commit them to the orphan `pr-assets` branch (one folder per milestone, e.g. `m3/`, via a scratch clone of that branch) and embed `https://raw.githubusercontent.com/brianchung611/scrum-poker/pr-assets/<folder>/<file>` links in a PR comment. Check the URLs return 200 first.
 

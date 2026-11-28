@@ -1,10 +1,8 @@
-import type { CardValue, VoteStats } from '@scrum-poker/shared';
-
-const NUMERIC = /^\d+(\.\d+)?$/;
+import { isNumericCard, type CardValue, type VoteStats } from '@scrum-poker/shared';
 
 /** Stats over numeric cards only; `?` and `☕` don't count. All null if nothing numeric. */
 export function computeStats(values: CardValue[]): VoteStats {
-  const nums = values.filter((v) => NUMERIC.test(v)).map(Number).sort((a, b) => a - b);
+  const nums = values.filter(isNumericCard).map(Number).sort((a, b) => a - b);
   if (nums.length === 0) return { average: null, median: null, min: null, max: null };
 
   const mid = Math.floor(nums.length / 2);
