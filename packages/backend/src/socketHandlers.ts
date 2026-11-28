@@ -3,8 +3,10 @@ import {
   MAX_DISPLAY_NAME_LENGTH,
   SERVER_EVENTS,
   type CastVotePayload,
+  type ChangeDeckPayload,
   type ErrorPayload,
   type JoinRoomPayload,
+  type KickParticipantPayload,
   type ParticipantJoinedPayload,
   type ParticipantLeftPayload,
   type VoteCastPayload,
@@ -15,6 +17,7 @@ import { normalizeRoomCode } from './roomCode.js';
 import {
   addPlayer,
   castVote,
+  changeDeck,
   getRoom,
   removePlayer,
   resetRound,
@@ -150,6 +153,38 @@ export function registerSocketHandlers(io: Server): void {
       resetRound(room);
       io.to(room.code).emit(SERVER_EVENTS.ROUND_RESET);
     });
+
+    socket.on(CLIENT_EVENTS.CHANGE_DECK, (payload: Partial<ChangeDeckPayload> | undefined) => {
+      const room = facilitatorRoom(socket);
+      if (!room) return;
+
+      if (!changeDeck(room, payload?.deckId, payload?.customCards)) {
+        sendError(socket, 'invalid_deck');
+        return;
+      }
+      // The deck changed and the round restarted, so everyone needs a fresh snapshot.
+      for (const playerId of room.players.keys()) sendRoomState(io, room, playerId);
+    });
+
+    socket.on(
+      CLIENT_EVENTS.KICK_PARTICIPANT,
+      (payload: Partial<KickParticipantPayload> | undefined) => {
+        const room = facilitatorRoom(socket);
+        if (!room) return;
+
+        const targetId = String(payload?.participantId ?? '');
+        const target = io.sockets.sockets.get(targetId);
+        if (targetId === socket.id || !target || !room.players.has(targetId)) {
+          sendError(socket, 'invalid_participant');
+          return;
+        }
+
+        const kicked: ErrorPayload = { message: 'kicked' };
+        target.emit(SERVER_EVENTS.ERROR, kicked);
+        // Same path as a disconnect: drops the player and broadcasts participant_left.
+        leaveCurrentRoom(io, target);
+      },
+    );
 
     socket.on('disconnect', () => {
       leaveCurrentRoom(io, socket);

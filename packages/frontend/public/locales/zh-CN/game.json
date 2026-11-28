@@ -26,5 +26,11 @@
   "voted": "已投票",
   "notVotedYet": "尚未投票",
   "noVote": "未投票",
-  "outlier": "最高或最低票"
+  "outlier": "最高或最低票",
+  "changeDeck": "更换牌组",
+  "changeDeckWarning": "更换牌组会开始新一轮并清除所有投票。",
+  "applyDeck": "应用牌组",
+  "kick": "移除 {{name}}",
+  "kickConfirm": "要将 {{name}} 移出房间吗？",
+  "tallyCount_other": "{{count}} 票"
 }

@@ -1,4 +1,4 @@
-import type { CardValue, RoomState, VoteStats } from './types.js';
+import type { CardValue, DeckId, RoomState, VoteStats } from './types.js';
 
 // Client -> Server
 export const CLIENT_EVENTS = {
@@ -7,6 +7,7 @@ export const CLIENT_EVENTS = {
   REVEAL_VOTES: 'reveal_votes',
   RESET_ROUND: 'reset_round',
   KICK_PARTICIPANT: 'kick_participant',
+  CHANGE_DECK: 'change_deck',
 } as const;
 
 // Server -> Client
@@ -31,6 +32,12 @@ export interface CastVotePayload {
 
 export interface KickParticipantPayload {
   participantId: string;
+}
+
+export interface ChangeDeckPayload {
+  deckId: DeckId;
+  /** Required when `deckId` is `custom`. */
+  customCards?: CardValue[];
 }
 
 export interface ParticipantJoinedPayload {

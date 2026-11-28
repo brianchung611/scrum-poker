@@ -27,6 +27,20 @@
     "not_authorised": "Only the facilitator can do that.",
     "invalid_vote": "That card isn't in this deck.",
     "round_not_voting": "Voting is closed. Wait for the next round.",
-    "not_in_room": "You're not in this room. Try refreshing the page."
+    "not_in_room": "You're not in this room. Try refreshing the page.",
+    "invalid_deck": "That deck isn't valid.",
+    "invalid_participant": "That participant can't be removed.",
+    "kicked": "The facilitator removed you from the room.",
+    "room_expired": "This room expired after a period of inactivity."
+  },
+  "deck": "Card deck",
+  "customCards": "Cards",
+  "customCardsPlaceholder": "e.g. 1, 2, 3, 5, ?",
+  "customCardsHint": "{{min}}–{{max}} unique cards separated by commas, up to {{length}} characters each.",
+  "decks": {
+    "fibonacci": "Fibonacci (1, 2, 3, 5, 8…)",
+    "tshirt": "T-shirt sizes (XS–XXL)",
+    "powers_of_2": "Powers of 2 (1, 2, 4, 8…)",
+    "custom": "Custom"
   }
 }

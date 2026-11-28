@@ -27,6 +27,20 @@
     "not_authorised": "只有主持人可以執行此操作。",
     "invalid_vote": "此牌組中沒有這張卡牌。",
     "round_not_voting": "投票已結束，請等待下一輪。",
-    "not_in_room": "你不在此房間中，請重新整理頁面。"
+    "not_in_room": "你不在此房間中，請重新整理頁面。",
+    "invalid_deck": "此牌組無效。",
+    "invalid_participant": "無法移除該參與者。",
+    "kicked": "主持人已將你移出房間。",
+    "room_expired": "此房間因閒置過久已過期。"
+  },
+  "deck": "牌組",
+  "customCards": "卡牌",
+  "customCardsPlaceholder": "例如 1, 2, 3, 5, ?",
+  "customCardsHint": "{{min}}–{{max}} 張不重複的卡牌，以逗號分隔，每張最多 {{length}} 個字元。",
+  "decks": {
+    "fibonacci": "費波那契 (1, 2, 3, 5, 8…)",
+    "tshirt": "T 恤尺寸 (XS–XXL)",
+    "powers_of_2": "2 的次方 (1, 2, 4, 8…)",
+    "custom": "自訂"
   }
 }

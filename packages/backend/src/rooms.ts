@@ -1,6 +1,5 @@
 import {
-  DECKS,
-  DEFAULT_DECK,
+  resolveDeck,
   type CardValue,
   type DeckId,
   type Player,
@@ -14,6 +13,7 @@ import { computeStats } from './stats.js';
 export interface Room {
   code: string;
   deckId: DeckId;
+  cards: CardValue[];
   phase: RoomPhase;
   // Map preserves insertion order, so the first entry is the longest-present player.
   players: Map<string, Player>;
@@ -27,11 +27,12 @@ export interface Room {
 // be answered with a full snapshot.
 const rooms = new Map<string, Room>();
 
-export function createRoom(deckId: DeckId = DEFAULT_DECK): Room {
+export function createRoom(deck: { deckId: DeckId; cards: CardValue[] }): Room {
   const code = generateRoomCode((candidate) => rooms.has(candidate));
   const room: Room = {
     code,
-    deckId,
+    deckId: deck.deckId,
+    cards: deck.cards,
     phase: 'voting',
     players: new Map(),
     facilitatorId: null,
@@ -92,7 +93,7 @@ export function castVote(room: Room, playerId: string, value: CardValue): CastVo
   const player = room.players.get(playerId);
   if (!player) return 'not_in_room';
   if (room.phase !== 'voting') return 'not_voting';
-  if (!DECKS[room.deckId].includes(value)) return 'invalid_vote';
+  if (!room.cards.includes(value)) return 'invalid_vote';
 
   room.votes.set(playerId, value);
   player.hasVoted = true;
@@ -114,10 +115,33 @@ export function resetRound(room: Room): void {
   touch(room);
 }
 
+/** Switches the deck. Existing votes no longer apply, so this also starts a new round. */
+export function changeDeck(room: Room, deckId: unknown, customCards?: unknown): boolean {
+  const deck = resolveDeck(deckId, customCards);
+  if (!deck) return false;
+  room.deckId = deck.deckId;
+  room.cards = deck.cards;
+  resetRound(room);
+  return true;
+}
+
+/** Deletes rooms with no activity for `ttlMs` and returns them so players can be notified. */
+export function expireRooms(now: number, ttlMs: number): Room[] {
+  const expired: Room[] = [];
+  for (const room of rooms.values()) {
+    if (now - room.lastActivity >= ttlMs) {
+      rooms.delete(room.code);
+      expired.push(room);
+    }
+  }
+  return expired;
+}
+
 export function toRoomState(room: Room, myId: string): RoomState {
   const state: RoomState = {
     roomCode: room.code,
     deckId: room.deckId,
+    cards: room.cards,
     phase: room.phase,
     players: [...room.players.values()],
     facilitatorId: room.facilitatorId,

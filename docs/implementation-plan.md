@@ -8,13 +8,13 @@ Working plan for building Scrum Poker from [scrum-poker-prd.md](../scrum-poker-p
 |---|---|---|---|---|
 | 1 | Scaffold | Monorepo, shared types, Express + Socket.io, React + Vite, Railway config, i18next + 3 locales | ✅ Done | [#1](https://github.com/brianchung611/scrum-poker/pull/1) |
 | 2 | Room lifecycle | Create room, join by code, live participant list, reconnection recovery | ✅ Done | [#3](https://github.com/brianchung611/scrum-poker/pull/3) |
-| 3 | Voting core (**MVP**) | Card deck, private voting, facilitator reveal, stats, round reset | 🔄 In review | [#4](https://github.com/brianchung611/scrum-poker/pull/4) |
-| 4 | Polish | Round reset*, kick, mobile layout, deck selection, room expiry, language switcher UI* | ⬜ Deferred | — |
-| 5 | P1 features | Observer mode, story name, facilitator transfer, timer | ⬜ Deferred | — |
+| 3 | Voting core (**MVP**) | Card deck, private voting, facilitator reveal, stats, round reset | ✅ Done | [#4](https://github.com/brianchung611/scrum-poker/pull/4) |
+| 4 | Polish | Round reset*, kick, mobile layout, deck selection, room expiry, language switcher UI* | 🔄 In review | [#5](https://github.com/brianchung611/scrum-poker/pull/5) |
+| 5 | P1 features | Observer mode, story name, facilitator transfer, timer | ⬜ Not started (needs user go-ahead) | — |
 
 \* Round reset is built in M3 (needed for a usable MVP loop). The language switcher already exists from M1. M4 covers what's left of the PRD's M4 row.
 
-Agreed scope for the current effort is **Milestones 1–3**. M4–5 are deferred until the user asks for them.
+Agreed scope so far: **Milestones 1–4** (the user asked to continue after the M3 MVP). M5 (P1 features) hasn't been requested yet; ask before starting it.
 
 ## Workflow rules
 
@@ -40,16 +40,16 @@ Agreed scope for the current effort is **Milestones 1–3**. M4–5 are deferred
 - **Room expiry (TTL cleanup)** is M4; keep a `lastActivity` timestamp on the room model so it's a small addition later.
 - **Railway**: config only (`railway.json`); not deployed, no credentials available.
 
-## Current codebase (after M3)
+## Current codebase (after M4)
 
 ```
 packages/
-  shared/    types.ts (Locale, DECKS, Player, RoomState incl. myVote/votes/stats, VoteStats, CreateRoomResponse, limits…), events.ts (CLIENT_EVENTS / SERVER_EVENTS + payload types)
+  shared/    decks.ts (presets, custom-deck validation, resolveDeck), types.ts (Locale, Player, RoomState incl. myVote/votes/stats, VoteStats, CreateRoomResponse, limits…), events.ts (CLIENT_EVENTS / SERVER_EVENTS + payload types)
   backend/   index.ts (Express: /health, POST /api/rooms; Socket.io), rooms.ts (in-memory Map<code, Room>, add/remove player,
-             facilitator promotion, castVote/revealVotes/resetRound, toRoomState(room, myId)), roomCode.ts, stats.ts,
-             socketHandlers.ts (join_room, cast_vote, reveal_votes, reset_round, disconnect)
+             facilitator promotion, castVote/revealVotes/resetRound/changeDeck, expireRooms, toRoomState(room, myId)), roomCode.ts, stats.ts, cleanup.ts,
+             socketHandlers.ts (join_room, cast_vote, reveal_votes, reset_round, change_deck, kick_participant, disconnect)
   frontend/  App.tsx (BrowserRouter, Suspense), pages/{HomePage,RoomPage}, components/{Header,LanguageSwitcher,NameForm,ParticipantList},
-             components/{CardDeck,RoundControls,VoteStats}, store/useRoomStore.ts (Zustand + joinRoom(code, name) → cleanup fn,
+             components/{CardDeck,RoundControls,VoteStats,DeckPicker,DeckSettings}, store/useRoomStore.ts (Zustand + joinRoom(code, name) → cleanup fn,
              castVote/revealVotes/resetRound), socket/socket.ts, api.ts, session.ts (sessionStorage name),
              i18n.ts, public/locales/{en,zh-TW,zh-CN}/{common,game}.json
 railway.json, .claude/launch.json, tsconfig.base.json (strict, Bundler resolution)
@@ -80,6 +80,17 @@ railway.json, .claude/launch.json, tsconfig.base.json (strict, Bundler resolutio
 - Votes of players who leave are kept once the round is revealed (so published stats stay consistent) and dropped if they leave mid-voting. Consequence: a player who refreshes after the reveal rejoins as a new player with no vote, while their old vote still counts in the stats (no-auth limitation).
 - The facilitator can click New round at any time, including mid-voting (clears all votes).
 - Reveal requires at least one vote (button disabled otherwise; the server doesn't enforce this).
+
+### M4 implementation notes
+
+- **Decks**: `fibonacci`, `tshirt`, `powers_of_2`, `custom` (see `packages/shared/src/decks.ts`). `RoomState.cards` is the resolved card list; clients render that, never a lookup by `deckId`. Custom decks: 2–20 unique cards, ≤5 chars each, comma-separated; validated by the same shared `normalizeCustomCards` on client and server (`POST /api/rooms` returns 400 `invalid_deck`).
+- **Changing the deck** (`change_deck`, facilitator-only) also resets the round, then sends everyone a fresh `room_state` (no new server event). The UI is a `<details>` "Change deck" under the card deck, with a warning that votes are cleared.
+- **Non-numeric decks** (T-shirt, custom words) have no average, so `VoteStats` shows a per-card tally instead of the four stat tiles.
+- **Kick** (`kick_participant`, facilitator-only): can't kick yourself; the target gets error `kicked` (fatal page, and the client disconnects its socket so it can't silently auto-rejoin), then the server runs the normal leave path (`participant_left`). There's no ban: a kicked player who refreshes or reopens the link can rejoin. The UI asks for a `window.confirm` first.
+- **Room expiry**: `cleanup.ts` sweeps every `ROOM_CLEANUP_INTERVAL_SECONDS` (default 60) and deletes rooms idle for `ROOM_TTL_MINUTES` (default 120, fractions allowed for testing). Activity = anything that calls `touch()` (join, leave, vote, reveal, reset, deck change). Connected players of an expired room get error `room_expired` and are disconnected. This also removes empty rooms, which M2 kept around.
+- New error codes in all 3 `common.json`: `invalid_deck`, `invalid_participant`, `kicked`, `room_expired`.
+- Mobile/responsive and the language switcher were already in place from M1–M3, so M4 only verified them with the new controls.
+- Gotcha: editing frontend files while several tabs are open makes Vite live-reload them all, so every client rejoins (the first to reconnect becomes facilitator). Don't edit code mid-way through a multi-tab manual test.
 
 ## Milestone 2 — Room lifecycle (built; plan kept for reference)
 

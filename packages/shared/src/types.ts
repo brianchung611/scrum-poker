@@ -4,16 +4,17 @@ export const DEFAULT_LOCALE: Locale = 'en';
 
 export type CardValue = string;
 
-export type DeckId = 'fibonacci';
-
-export const DECKS: Record<DeckId, CardValue[]> = {
-  fibonacci: ['0', '1', '2', '3', '5', '8', '13', '21', '?', '☕'],
-};
-
-export const DEFAULT_DECK: DeckId = 'fibonacci';
+export type PresetDeckId = 'fibonacci' | 'tshirt' | 'powers_of_2';
+export type DeckId = PresetDeckId | 'custom';
 
 export const MAX_DISPLAY_NAME_LENGTH = 30;
 export const ROOM_CODE_LENGTH = 6;
+
+export interface CreateRoomRequest {
+  deckId?: DeckId;
+  /** Required when `deckId` is `custom`. */
+  customCards?: CardValue[];
+}
 
 export interface CreateRoomResponse {
   roomCode: string;
@@ -38,6 +39,8 @@ export interface VoteStats {
 export interface RoomState {
   roomCode: string;
   deckId: DeckId;
+  /** The cards players can pick from, in display order. */
+  cards: CardValue[];
   phase: RoomPhase;
   players: Player[];
   facilitatorId: string | null;

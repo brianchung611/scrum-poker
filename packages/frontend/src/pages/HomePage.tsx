@@ -3,6 +3,13 @@ import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { createRoom } from '../api';
+import {
+  customCardsOf,
+  DEFAULT_DECK_CHOICE,
+  DeckPicker,
+  isDeckChoiceValid,
+  type DeckChoice,
+} from '../components/DeckPicker';
 import { NameForm } from '../components/NameForm';
 import { getStoredDisplayName, storeDisplayName } from '../session';
 
@@ -11,6 +18,7 @@ export default function HomePage() {
   const navigate = useNavigate();
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+  const [deck, setDeck] = useState<DeckChoice>(DEFAULT_DECK_CHOICE);
   const [code, setCode] = useState('');
   const codeId = useId();
   const initialName = getStoredDisplayName();
@@ -19,7 +27,10 @@ export default function HomePage() {
     setCreating(true);
     setCreateError(null);
     try {
-      const { roomCode } = await createRoom();
+      const { roomCode } = await createRoom({
+        deckId: deck.deckId,
+        customCards: deck.deckId === 'custom' ? (customCardsOf(deck) ?? undefined) : undefined,
+      });
       storeDisplayName(displayName);
       navigate(`/room/${roomCode}`);
     } catch {
@@ -44,11 +55,13 @@ export default function HomePage() {
           title={t('createRoom')}
           hint={t('createRoomHint')}
           submitLabel={t('start')}
-          busy={creating}
+          busy={creating || !isDeckChoiceValid(deck)}
           error={createError}
           initialName={initialName}
           onSubmit={handleCreate}
-        />
+        >
+          <DeckPicker value={deck} onChange={setDeck} />
+        </NameForm>
         <NameForm
           title={t('joinRoom')}
           hint={t('joinRoomHint')}
