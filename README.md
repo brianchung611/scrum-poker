@@ -29,4 +29,4 @@ npm run typecheck   # typechecks all packages
 
 ## Deployment
 
-The backend deploys to Railway (see `railway.json`). The frontend builds to static assets deployable to Vercel, Cloudflare Pages, or Railway static hosting — set `VITE_SOCKET_URL` to the backend's public URL.
+The backend deploys to Railway (see `railway.json`). The frontend builds to static assets deployable to Vercel, Cloudflare Pages, or Railway static hosting — set `VITE_SOCKET_URL` to the backend's public URL. The host must serve `index.html` for unknown paths (SPA fallback) so `/room/:code` links work.

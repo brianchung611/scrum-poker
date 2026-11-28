@@ -11,5 +11,18 @@
   "joinRoom": "加入房间",
   "displayName": "显示名称",
   "roomCode": "房间代码",
-  "error": "发生错误"
+  "error": "发生错误",
+  "start": "开始",
+  "join": "加入",
+  "roomCodePlaceholder": "例如 K7P2QD",
+  "backHome": "返回首页",
+  "loading": "加载中…",
+  "createRoomHint": "开始新的估点，并将链接分享给团队。",
+  "joinRoomHint": "请输入你收到的房间代码。",
+  "createFailed": "无法创建房间，请重试。",
+  "errors": {
+    "room_not_found": "找不到房间，请检查代码后重试。",
+    "invalid_display_name": "请输入显示名称（最多 30 个字符）。",
+    "generic": "发生错误。"
+  }
 }

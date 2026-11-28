@@ -7,8 +7,8 @@ Working plan for building Scrum Poker from [scrum-poker-prd.md](../scrum-poker-p
 | # | Milestone | PRD scope | Status | PR |
 |---|---|---|---|---|
 | 1 | Scaffold | Monorepo, shared types, Express + Socket.io, React + Vite, Railway config, i18next + 3 locales | ✅ Done | [#1](https://github.com/brianchung611/scrum-poker/pull/1) |
-| 2 | Room lifecycle | Create room, join by code, live participant list, reconnection recovery | ⬜ Next | — |
-| 3 | Voting core (**MVP**) | Card deck, private voting, facilitator reveal, stats | ⬜ | — |
+| 2 | Room lifecycle | Create room, join by code, live participant list, reconnection recovery | 🔄 In review | [#3](https://github.com/brianchung611/scrum-poker/pull/3) |
+| 3 | Voting core (**MVP**) | Card deck, private voting, facilitator reveal, stats | ⬜ Next (after M2 merges) | — |
 | 4 | Polish | Round reset*, kick, mobile layout, deck selection, room expiry, language switcher UI* | ⬜ Deferred | — |
 | 5 | P1 features | Observer mode, story name, facilitator transfer, timer | ⬜ Deferred | — |
 
@@ -39,28 +39,36 @@ Agreed scope for the current effort is **Milestones 1–3**. M4–5 are deferred
 - **Room expiry (TTL cleanup)** is M4; keep a `lastActivity` timestamp on the room model so it's a small addition later.
 - **Railway**: config only (`railway.json`); not deployed, no credentials available.
 
-## Current codebase (after M1)
+## Current codebase (after M2)
 
 ```
 packages/
-  shared/    types.ts (Locale, DECKS, Player, RoomState, VoteStats…), events.ts (CLIENT_EVENTS / SERVER_EVENTS + payload types), index.ts
-  backend/   src/index.ts — Express + cors, GET /health, Socket.io server (no handlers yet)
-  frontend/  Vite + React 18 + TS; i18n.ts (http-backend, lazy namespaces, localStorage detection);
-             components/LanguageSwitcher.tsx; App.tsx is a placeholder home page;
-             public/locales/{en,zh-TW,zh-CN}/{common,game}.json
+  shared/    types.ts (Locale, DECKS, Player, RoomState, VoteStats, CreateRoomResponse, limits…), events.ts (CLIENT_EVENTS / SERVER_EVENTS + payload types)
+  backend/   index.ts (Express: /health, POST /api/rooms; Socket.io), rooms.ts (in-memory Map<code, Room>, add/remove player,
+             facilitator promotion, toRoomState(room, myId)), roomCode.ts, socketHandlers.ts (join_room, disconnect)
+  frontend/  App.tsx (BrowserRouter, Suspense), pages/{HomePage,RoomPage}, components/{Header,LanguageSwitcher,NameForm,ParticipantList},
+             store/useRoomStore.ts (Zustand + joinRoom(code, name) → cleanup fn), socket/socket.ts, api.ts, session.ts (sessionStorage name),
+             i18n.ts, public/locales/{en,zh-TW,zh-CN}/{common,game}.json
 railway.json, .claude/launch.json, tsconfig.base.json (strict, Bundler resolution)
 ```
 
-Dependencies for later milestones are already installed (`react-router-dom`, `zustand`, `socket.io-client`) but unused so far. `nanoid` still needs adding to the backend.
+### M2 implementation notes
+
+- Server errors are language-agnostic codes in `{ message }` (`room_not_found`, `invalid_display_name`); the frontend translates them via `common:errors.<code>`. Add new codes to all 3 `common.json` files.
+- `joinRoom()` in the store re-emits `join_room` on every socket `connect`, which is how reconnects recover. A server restart wipes rooms, so a reconnect then shows "room not found" (expected; rooms are ephemeral).
+- The room store only mutates local state from server events; M3 should follow the same pattern (emit → wait for broadcast → update).
+- Player id == `socket.id`. A refresh gets a new id, so a refreshed facilitator rejoins as a normal participant (the promoted player keeps the role). Acceptable per the no-auth design; revisit with M5 facilitator transfer.
+- Empty rooms are kept (so a lone player can refresh and rejoin) until M4's TTL cleanup removes them.
+- Production hosting of the frontend needs an SPA fallback (all paths → `index.html`) because of `/room/:code`.
 
 ## Gotchas learned in M1
 
 - Frontend relative imports must **omit** file extensions (`./App`, not `./App.tsx`); tsconfig doesn't enable `allowImportingTsExtensions`.
 - Backend is `NodeNext` ESM, so its relative imports **need** `.js` extensions. `shared` also uses `.js` extensions in its relative imports.
-- `@scrum-poker/shared` resolves through its built `dist/`. Backend and frontend only see shared type/constant changes after `npm run build -w @scrum-poker/shared`. M1 didn't import shared at runtime in the backend, so this wasn't hit yet; M2 will. Consider a `predev` step (or building shared at the start of `npm run dev`) in M2 so dev doesn't silently use stale shared code.
+- `@scrum-poker/shared` resolves through its built `dist/`. Root `postinstall` and `predev` now build it, but if you change shared while the dev servers run (or start a single package via `.claude/launch.json`), re-run `npm run build -w @scrum-poker/shared`.
 - Root `npm run build` builds shared → backend → frontend in order.
 
-## Milestone 2 — Room lifecycle (next)
+## Milestone 2 — Room lifecycle (built; plan kept for reference)
 
 **Backend**
 - `rooms.ts`: in-memory `Map<roomCode, Room>` (players, facilitatorId, deckId, phase, `lastActivity`) with helpers to create/get/add/remove players and produce a per-recipient `RoomState` snapshot (`myId` = that socket's id).

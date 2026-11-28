@@ -1,33 +1,37 @@
+import { Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
-import { LanguageSwitcher } from './components/LanguageSwitcher';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { Header } from './components/Header';
+import HomePage from './pages/HomePage';
+import RoomPage from './pages/RoomPage';
+
+function Loading() {
+  return <p className="muted centered">…</p>;
+}
 
 export default function App() {
-  const { t } = useTranslation('common');
+  return (
+    <BrowserRouter>
+      <Suspense fallback={<Loading />}>
+        <Layout />
+      </Suspense>
+    </BrowserRouter>
+  );
+}
+
+function Layout() {
+  // Subscribing here re-renders the shell when the language changes.
+  useTranslation('common');
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <header
-        style={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          padding: '1rem',
-        }}
-      >
-        <LanguageSwitcher />
-      </header>
-      <main
-        style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          textAlign: 'center',
-          padding: '1rem',
-        }}
-      >
-        <h1>{t('appName')}</h1>
-        <p>{t('tagline')}</p>
+    <div className="app">
+      <Header />
+      <main>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/room/:code" element={<RoomPage />} />
+          <Route path="*" element={<HomePage />} />
+        </Routes>
       </main>
     </div>
   );
